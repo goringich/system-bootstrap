@@ -1,0 +1,11 @@
+[Unit]
+Description=Google Chrome
+After=pipewire.service pipewire-pulse.service wireplumber.service
+Requires=pipewire.service pipewire-pulse.service wireplumber.service
+
+[Service]
+ExecStart=/usr/bin/google-chrome-stable
+Restart=no
+
+[Install]
+WantedBy=default.target

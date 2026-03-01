@@ -1,0 +1,25 @@
+[Added Associations]
+application/msword=libreoffice-3.desktop;
+application/pdf=google-chrome-stable-5.desktop;google-chrome-stable-4.desktop;google-chrome-stable-3.desktop;google-chrome-stable-2.desktop;google-chrome-stable.desktop;
+application/vnd.openxmlformats-officedocument.presentationml.presentation=libreoffice.desktop;
+application/vnd.openxmlformats-officedocument.wordprocessingml.document=libreoffice-2.desktop;libreoffice.desktop;
+application/zip=unzip.desktop;
+image/jpeg=gwenview-2.desktop;gwenview.desktop;google-chrome-stable.desktop;
+
+[Default Applications]
+application/msword=libreoffice-3.desktop;
+application/pdf=google-chrome-stable-5.desktop;
+application/vnd.openxmlformats-officedocument.presentationml.presentation=libreoffice.desktop;
+application/vnd.openxmlformats-officedocument.wordprocessingml.document=libreoffice-2.desktop;
+application/x-extension-burp=install4j_1a277sv-BurpSuitePro.desktop
+application/x-wayland-gnome-saved-search=thunar.desktop
+application/zip=unzip.desktop;
+image/jpeg=gwenview-2.desktop;
+inode/directory=thunar.desktop
+text/html=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
+x-scheme-handler/tg=org.telegram.desktop.desktop
+x-scheme-handler/tonsite=org.telegram.desktop.desktop

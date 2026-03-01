@@ -1,0 +1,15 @@
+[safe]
+	directory = /home/goringich/Desktop/work/frontend
+	directory = /mnt/windows/Users/user/Desktop/Obsidian
+	directory = /mnt/windows/Users/user/Desktop/Obsidian
+	directory = /mnt/windows/Users/user/Desktop/Obsidian
+[user]
+	email = actingsv@gmail.com
+	name = Igor
+[core]
+	editor = nano
+[http]
+	postBuffer = 524288000
+	sslVerify = false
+[http "https://gittest.radiogigabit.net"]
+	sslVerify = false

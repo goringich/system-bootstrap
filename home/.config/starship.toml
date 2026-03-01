@@ -1,0 +1,137 @@
+add_newline = false
+format = "$directory $git_branch $git_status $git_metrics $python $nodejs $rust $golang $package $custom.git_stash $custom.docker_running $custom.updates $custom.ssh_agent $status $cmd_duration\n$character"
+right_format = "$time $battery $memory_usage ${custom.cpu_temp} $hostname"
+
+[character]
+success_symbol = "❯"
+error_symbol   = "✖"
+
+[directory]
+truncation_length = 3
+truncate_to_repo  = true
+style = "bold cyan"
+read_only = " "
+
+[git_branch]
+symbol = " "
+format = "[$symbol$branch]($style) "
+style = "bright-magenta"
+
+[git_status]
+format = "([$all_status$ahead_behind]($style)) "
+style = "yellow"
+
+[git_metrics]
+disabled = false
+format = " [+${added}]($added_style) [-${deleted}]($deleted_style)"
+added_style = "green"
+deleted_style = "red"
+
+[cmd_duration]
+min_time = 200
+format = "⏱ $duration"
+style = "dim"
+
+[status]
+disabled = false
+map_symbol = true
+format = "[✗ $status]($style) "
+style = "red"
+
+[nodejs]
+symbol = " "
+format = "[$symbol$version]($style) "
+style = "green"
+
+[rust]
+symbol = " "
+format = "[$symbol$version]($style) "
+style = "orange"
+
+[golang]
+symbol = " "
+format = "[$symbol$version]($style) "
+style = "bright-blue"
+
+[python]
+symbol = " "
+format = "[$virtualenv $version]($style) "
+pyenv_version_name = true
+style = "cyan"
+
+[package]
+symbol = "󰏗 "
+format = "[$symbol$version]($style) "
+style = "magenta"
+
+[docker_context]
+symbol = " "
+format = "[$symbol$context]($style) "
+style = "bright-cyan"
+
+[kubernetes]
+symbol = "☸ "
+format = "[$symbol$context(::$namespace)]($style) "
+disabled = false
+style = "bright-green"
+
+[time]
+disabled = false
+format = "🕒 $time"
+time_format = "%H:%M"
+style = "dim"
+
+[battery]
+disabled = false
+format = "[$symbol $percentage]"
+full_symbol = "🔋"
+charging_symbol = "⚡"
+discharging_symbol = "🔌"
+
+[memory_usage]
+disabled = false
+threshold = 0
+style = "bold dim"
+format = "[RAM $ram_pct]($style)"
+
+# надёжная температура CPU через sensors
+[custom.cpu_temp]
+command = "sensors | awk '/Package id 0:/ {gsub(\"+\", \"\", $3); print \"CPU \" $3; exit}'"
+shell = ["bash", "-c"]
+when = "command -v sensors >/dev/null 2>&1"
+format = "[$output]($style)"
+style = "bold red"
+
+# Дополнительные кастомные модули — удобные фичи
+[custom.git_stash]
+command = "bash -lc 'git rev-parse --git-dir >/dev/null 2>&1 && git stash list | wc -l | awk \"{if($1>0) print \"⚑ \"$1}\"'"
+shell = ["bash", "-c"]
+when = "command -v git >/dev/null 2>&1"
+format = "[$output]($style) "
+style = "purple bold"
+
+[custom.docker_running]
+command = "bash -lc 'docker ps -q 2>/dev/null | wc -l | awk \"{if($1>0) print \" \"$1}\"'"
+shell = ["bash","-c"]
+when = "command -v docker >/dev/null 2>&1"
+format = "[$output]($style)"
+style = "bright-cyan"
+
+[custom.updates]
+command = "bash -lc 'if command -v checkupdates >/dev/null 2>&1; then checkupdates | wc -l; elif command -v apt >/dev/null 2>&1; then apt list --upgradable 2>/dev/null | tail -n +2 | wc -l; elif command -v brew >/dev/null 2>&1; then brew outdated --quiet | wc -l; else echo 0; fi | awk \"{if($1>0) print \"⬆ \"$1}\"'"
+shell = ["bash","-c"]
+when = "command -v checkupdates >/dev/null 2>&1 || command -v apt >/dev/null 2>&1 || command -v brew >/dev/null 2>&1"
+format = "[$output]($style)"
+style = "yellow bold"
+
+[custom.ssh_agent]
+command = "bash -lc 'if [ -n \"$SSH_AUTH_SOCK\" ]; then echo \"🔑 SSH\"; fi'"
+shell = ["bash","-c"]
+when = "test -n \"$SSH_AUTH_SOCK\""
+format = "[$output]($style)"
+style = "bright-yellow"
+
+[hostname]
+ssh_only = true
+format = "[$hostname]($style)"
+style = "bright-black"

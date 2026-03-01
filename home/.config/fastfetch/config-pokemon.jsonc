@@ -1,0 +1,119 @@
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+ "logo": {
+  "height": 5,
+  "width": 10,
+  "padding": {
+    "top": 1
+    }
+  },
+    "display": {
+        "separator": " -> "
+    },
+    "modules": [
+        "break",
+        {
+            "type": "title",
+            "keyWidth": 10,
+			"format": "         {6}{7}{8}"
+        },
+        {
+            "type": "custom",
+            "format": " ─────────────────────────── "
+        },
+        {
+            "type": "os",
+            "key": "󰣇 ",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "host",
+            "key": "󰌢 ",
+            "keyColor": "green"
+        },
+        {
+            "type": "kernel",
+            "key": " ",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "command",
+            "key": " ",
+            "keyColor": "blue",
+            "text": "echo JaKooLit Version: ${DOTS_VERSION}"
+        },
+        {
+            "type": "wm",
+            "key": " ",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "shell",
+            "key": " ",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "terminal",
+            "key": " ",
+            "keyColor": "blue"
+        },
+        {
+            "type": "packages",
+            "key": "󰏖 ",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "cpu",
+            "key": "󰻠 ",
+            "keyColor": "green"
+        },
+        {
+            "type": "gpu",
+            "key": "󰢮 ",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "memory",
+            "key": "󰍛 ",
+            "keyColor": "magenta",
+            // format: used / total
+            "format": "{1} / {2}"
+        },
+        {
+            "type": "swap",
+            "key": "󰾴 ",
+            "keyColor": "yellow",
+            "format": "{1} / {2}"
+        },
+        {
+            "type": "disk",
+            "key": "󰋊 ",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "localip",
+            "key": "󰩟 ",
+            "keyColor": "green"
+        },
+        {
+            "type": "uptime",
+            "key": "󰔛 ",
+            "keyColor": "green"
+        },
+        {
+            "type": "command",
+            "key": "󱦟 ",
+            "keyColor": "magenta",
+            "text": "echo $(( ($(date +%s) - $(stat -c %W /)) / 86400 )) days"
+        },
+        {
+            "type": "custom",
+            "format": " ─────────────────────────── "
+        },
+        {
+            "type": "custom",
+            "format": "   \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m  \u001b[90m "
+        },
+		"break"
+    ]
+}
