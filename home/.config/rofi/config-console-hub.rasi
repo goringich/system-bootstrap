@@ -1,0 +1,42 @@
+@import "~/.config/rofi/config.rasi"
+
+configuration {
+    show-icons: false;
+    hover-select: true;
+    cycle: true;
+}
+
+window {
+    width: 42%;
+    border: 2px;
+    border-radius: 18px;
+}
+
+mainbox {
+    children: [ "inputbar", "listview", "message" ];
+    spacing: 12px;
+    padding: 18px;
+}
+
+prompt {
+    enabled: true;
+    str: "  ";
+}
+
+entry {
+    placeholder: "Console tools";
+}
+
+listview {
+    lines: 10;
+    columns: 1;
+    fixed-height: true;
+    spacing: 8px;
+    scrollbar: true;
+}
+
+element {
+    border-radius: 14px;
+    padding: 12px;
+}
+

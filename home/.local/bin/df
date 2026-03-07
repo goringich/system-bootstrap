@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# df shim: prefer duf when safe; otherwise fallback to coreutils df
+set -euo pipefail
+
+has_opts=false
+for a in "$@"; do
+  case "$a" in
+    -*) has_opts=true; break;;
+  esac
+done
+
+DF_BIN=${DF_BIN:-/usr/bin/df}
+
+if command -v duf >/dev/null 2>&1 && [ "$has_opts" = false ]; then
+  exec duf "$@"
+else
+  exec "$DF_BIN" "$@"
+fi

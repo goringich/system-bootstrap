@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# ls shim: show hidden by default; use eza when available, otherwise coreutils ls
+set -euo pipefail
+
+has_opts=false
+for a in "$@"; do
+  case "$a" in
+    -*) has_opts=true; break;;
+  esac
+done
+
+LS_BIN=${LS_BIN:-/usr/bin/ls}
+
+if [ "$has_opts" = false ]; then
+  if command -v eza >/dev/null 2>&1; then
+    # Default: show hidden entries by default (exclude nothing)
+    exec eza -a "$@"
+  else
+    exec "$LS_BIN" -A "$@"
+  fi
+else
+  # With options, preserve exact system ls behavior
+  exec "$LS_BIN" "$@"
+fi

@@ -59,3 +59,5 @@ verify-gpu-after-reboot.sh
 .config/wlogout
 .config/xdg-desktop-portal
 .config/xfce4
+
+.local/bin

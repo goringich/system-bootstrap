@@ -5,6 +5,15 @@
 
 set -euo pipefail
 
+if command -v wallust >/dev/null 2>&1; then
+  WALLUST_BIN="$(command -v wallust)"
+elif [[ -x "$HOME/.cargo/bin/wallust" ]]; then
+  WALLUST_BIN="$HOME/.cargo/bin/wallust"
+else
+  notify-send -u critical "Wallust missing" "Install wallust to enable dynamic colors from wallpaper." >/dev/null 2>&1 || true
+  exit 0
+fi
+
 # Inputs and paths
 passed_path="${1:-}"
 cache_dir="$HOME/.cache/swww/"
@@ -107,12 +116,17 @@ wait_for_templates() {
 # Run wallust (silent) to regenerate templates defined in ~/.config/wallust/wallust.toml
 # -s is used in this repo to keep things quiet and avoid extra prompts
 start_ts=$(date +%s)
-wallust run -s "$wallpaper_path" || true
+"$WALLUST_BIN" run -s "$wallpaper_path" || true
 wallust_targets=(
   "$HOME/.config/waybar/wallust/colors-waybar.css"
   "$HOME/.config/rofi/wallust/colors-rofi.rasi"
 )
 wait_for_templates "$start_ts" "${wallust_targets[@]}" || true
+
+# Normalize and contrast-tune generated palettes for Waybar/Rofi
+if [ -x "$HOME/.config/hypr/scripts/WallustPolish.sh" ]; then
+  "$HOME/.config/hypr/scripts/WallustPolish.sh" || true
+fi
 
 # Normalize Ghostty palette syntax in case ':' was used by older files
 if [ -f "$HOME/.config/ghostty/wallust.conf" ]; then

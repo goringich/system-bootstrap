@@ -2,23 +2,16 @@
 /* Catppuccin Latte - Wallust */
 /* Original Design by DC user mannatsingh */
 
-@define-color white      	#F2F2F2;
-@define-color black      	#000000;
-@define-color text       	#FFFFFF;
-@define-color lightgray  	#686868;
-@define-color darkgray   	#353535;
+@import '../../.config/waybar/wallust/colors-waybar.css';
 
-@define-color transparent	rgba(1, 1, 1, 0.5);
-@define-color teal-trans	rgba(1, 117, 84, 0.5);
-@define-color cyan			rgba(53, 140, 169, 1);
-
-@define-color background-module     @transparent;
-@define-color border-color          @color12;
+@define-color background-module     @wb_surface;
+@define-color border-color          @wb_ring;
 @define-color button-color          @color11;
 @define-color button-hover          @color13;
-
-@import '../../.config/waybar/wallust/colors-waybar.css';
-@import "../waybar/style/catppuccin-themes/latte.css";
+@define-color cyber-bg              @wb_surface;
+@define-color cyber-bg-strong       @wb_surface_strong;
+@define-color cyber-ring            @wb_ring;
+@define-color cyber-glow            @wb_glow;
 
 * {
     font-family: "JetBrainsMono Nerd Font";
@@ -32,7 +25,7 @@
 window#waybar {
     background: transparent;
     border-radius: 0px;
-    color: #cba6f7;
+    color: @wb_text;
 }
 
 window#waybar.hidden {
@@ -40,22 +33,23 @@ window#waybar.hidden {
 }
 
 tooltip {
-    background: #1e1e2e;
-    border-radius: 12px;
-    border-width: 1px;
+    background: @cyber-bg-strong;
+    border-radius: 10px;
+    border-width: 2px;
     border-style: solid;
-    border-color: @border-color;
-    color: #ffffff;
+    border-color: @cyber-ring;
+    color: @wb_text;
 }
 
 /*-----module groups----*/
 .modules-left,
 .modules-center,
 .modules-right {
-    background-color: @background-module;
-    border-radius:15px;
-    border-bottom:2px solid @border-color;
-	padding-top: 5px;
+    background-color: @cyber-bg;
+    border-radius: 14px;
+    border: 1px solid @cyber-ring;
+    box-shadow: 0 0 14px @cyber-glow;
+	padding-top: 4px;
 	padding-bottom: 0px;
 	padding-right: 4px;
 	padding-left: 4px;
@@ -63,17 +57,17 @@ tooltip {
 
 #workspaces {
     padding: 5px 1px;
-    border-radius: 15px;
-    border:2px solid @border-color;
+    border-radius: 12px;
+    border: 1px solid @cyber-ring;
     font-weight: bold;
     font-style: normal;
-    opacity:0.8;
-    color:#FFFFFF;
+    opacity: 0.95;
+    color: @wb_text;
 }
 
 #taskbar button,   
 #workspaces button {
-    color: #6E6A86;
+    color: @wb_text_dim;
     box-shadow: none;
 	text-shadow: none;
     border-radius: 30px;
@@ -85,33 +79,34 @@ tooltip {
 
 #taskbar button.active,
 #workspaces button.active {
-    color: #ffd700;
-    border-radius: 50%;
-    background-color: black;
-    border-radius: 15px 15px 15px 15px;
+    color: @wb_accent_fg;
+    background-color: @wb_accent;
+    border-radius: 12px;
     padding-left: 8px;
     padding-right: 8px;
-    animation: gradient_f 20s ease-in infinite;
-    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+    box-shadow: 0 0 10px @cyber-glow;
+    animation: gradient_f 14s ease-in infinite;
+    transition: all 0.2s ease;
 }
 
 #workspaces button.focused {
-    color: #d8dee9;
+    color: @wb_text;
 }
 
 #workspaces button.urgent {
-    color: #11111b;
+    color: @wb_accent_fg;
+    background-color: @wb_accent_alt;
     border-radius: 10px;
 }
 
 #taskbar button:hover,
 #workspaces button:hover {
-    color: #ffd700;
-    border-radius: 10px;
+    color: @wb_accent;
+    border-radius: 8px;
  	padding-left: 2px;
     padding-right: 2px;
-    animation: gradient_f 20s ease-in infinite;
-    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+    animation: gradient_f 14s ease-in infinite;
+    transition: all 0.2s ease;
 }
 
 #backlight,
@@ -173,9 +168,29 @@ tooltip {
 #custom-weather.showyIcyDay,
 #custom-weather.snowyIcyNight,
 #custom-weather.sunnyDay {
-    color: #e5d9f5;
+    color: @wb_text;
 	padding-right: 6px;
 	padding-left: 6px;;
+}
+
+#custom-gpu-status,
+#custom-gpu_status {
+    color: @wb_accent;
+}
+
+#custom-gpu-status.warm,
+#custom-gpu_status.warm {
+    color: #f8d66d;
+}
+
+#custom-gpu-status.hot,
+#custom-gpu_status.hot {
+    color: #ff7a7a;
+}
+
+#custom-gpu-status.offline,
+#custom-gpu_status.offline {
+    color: #8a8f9e;
 }
 
 #temperature.critical {
@@ -203,14 +218,14 @@ tooltip {
     min-width: 80px;
     min-height: 5px;
     border-radius: 5px;
-    background-color: #22252a;
+    background-color: @wb_surface_strong;
 }
 
 #backlight-slider highlight,
 #pulseaudio-slider highlight {
     min-height: 10px;
     border-radius: 5px;
-    background-color: #ba5663;
+    background-color: @wb_accent_alt;
 }
 
 #pulseaudio-slider,
@@ -223,23 +238,23 @@ tooltip {
 }
 
 #memory {
-	color: @sapphire;
+	color: @color14;
 }
 
 #cpu {
-	color: @mauve;
+	color: @color13;
 }
 
 #battery {
-	color: @rosewater;
+	color: @color10;
 }
 
 #disk {
-	color: @sky;
+	color: @color11;
 }
 
 #temperature.critical {
-    background-color: @red;
+    background-color: #ff4d4d;
 }
 
 #battery.critical:not(.charging) {
@@ -254,7 +269,7 @@ tooltip {
 #custom-hypridle,
 #custom-lock,
 #idle_inhibitor {
-    color: @teal;
+    color: @color10;
     border-bottom: 8px solid rgba(0, 0, 0, 0.2);
 }
 
@@ -267,16 +282,17 @@ tooltip {
 
 
 #clock#2 {
-    color: #efe8f7;
+    color: @wb_text;
 }
 
 #clock {
-	color: @sapphire;
-    border-radius: 15px;
-    border:2px solid @border-color;
+	color: @wb_text;
+    border-radius: 10px;
+    border: 1px solid @cyber-ring;
+    background: @wb_surface;
 }
 #custom-updates {
-    color: @yellow;
+    color: @color3;
 }
 #swaync{
     color: #ffd700;}

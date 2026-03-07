@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync Codex conversations to Obsidian markdown
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/.local/bin/codex-obsidian-sync

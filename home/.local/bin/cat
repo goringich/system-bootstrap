@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# cat shim: prefer bat when safe; otherwise fallback to coreutils cat
+set -euo pipefail
+
+has_opts=false
+for a in "$@"; do
+  case "$a" in
+    -*) has_opts=true; break;;
+  esac
+done
+
+CAT_BIN=${CAT_BIN:-/usr/bin/cat}
+
+if command -v bat >/dev/null 2>&1 && [ "$has_opts" = false ]; then
+  exec bat --paging=never --style=plain "$@"
+else
+  exec "$CAT_BIN" "$@"
+fi

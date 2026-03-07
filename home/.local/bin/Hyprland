@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Compatibility shim for malformed session command: "Hyprland via /path/to/config"
+if [ "$1" = "via" ] && [ -n "$2" ]; then
+  cfg="$2"
+  shift 2
+  exec /usr/bin/Hyprland --config "$cfg" "$@"
+fi
+exec /usr/bin/Hyprland "$@"

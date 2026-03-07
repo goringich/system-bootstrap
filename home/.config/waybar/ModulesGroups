@@ -25,6 +25,7 @@
 	"orientation": "horizontal",
 	"modules": [
 		"cpu",
+		"custom/gpu_status",
 		"power-profiles-daemon",
 		"memory",
 		"temperature",
@@ -42,6 +43,7 @@
 	"modules": [
 		"temperature",		
 		"cpu",
+		"custom/gpu_status",
 		"power-profiles-daemon",	
 		"memory",
 		"disk",

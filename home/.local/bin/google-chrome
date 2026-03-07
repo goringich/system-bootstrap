@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Thin wrapper to route google-chrome -> google-chrome-stable wrapper
+exec "$HOME/.local/bin/google-chrome-stable" "$@"

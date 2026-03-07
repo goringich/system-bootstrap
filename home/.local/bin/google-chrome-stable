@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Wrapper to keep Chrome on stable Wayland defaults and avoid aggressive
+# GPU/video flags that can increase load on unstable NVIDIA stacks.
+# Avoid duplicate flags if user passes their own.
+
+set -euo pipefail
+
+flags=(
+  --ozone-platform-hint=auto
+  --enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer
+  --disable-features=UseChromeOSDirectVideoDecoder
+  --disable-background-mode
+)
+
+args=("$@")
+for f in "${flags[@]}"; do
+  skip=false
+  for a in "${args[@]}"; do
+    # Match exact flag or same key with any value when flag has '='
+    if [[ "$a" == "$f" ]]; then
+      skip=true; break
+    fi
+    if [[ "$f" == *=* ]]; then
+      key="${f%%=*}="
+      if [[ "$a" == ${key}* ]]; then
+        skip=true; break
+      fi
+    fi
+    if [[ "$a" == --enable-features=* && "$f" == --enable-features=* ]]; then
+      # Merge enable-features lists to avoid overwriting
+      base="${a#--enable-features=}"
+      add="${f#--enable-features=}"
+      merged=$(printf "%s,%s\n" "$base" "$add" | awk -v RS=',' '!seen[$0]++' ORS=',' | sed 's/,$//')
+      # Replace in-place
+      for i in "${!args[@]}"; do
+        if [[ "${args[$i]}" == "$a" ]]; then
+          args[$i]="--enable-features=${merged}"
+          skip=true
+          break
+        fi
+      done
+    fi
+    if [[ "$a" == --disable-features=* && "$f" == --disable-features=* ]]; then
+      base="${a#--disable-features=}"
+      add="${f#--disable-features=}"
+      merged=$(printf "%s,%s\n" "$base" "$add" | awk -v RS=',' '!seen[$0]++' ORS=',' | sed 's/,$//')
+      for i in "${!args[@]}"; do
+        if [[ "${args[$i]}" == "$a" ]]; then
+          args[$i]="--disable-features=${merged}"
+          skip=true
+          break
+        fi
+      done
+    fi
+  done
+  if ! $skip; then
+    args+=("$f")
+  fi
+done
+
+# Lower CPU/IO priority a bit to reduce startup heat spikes.
+exec ionice -c2 -n7 nice -n 5 /usr/bin/google-chrome-stable "${args[@]}"

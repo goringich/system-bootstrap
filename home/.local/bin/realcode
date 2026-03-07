@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${1:-$PWD}"
+
+if [[ ! -d "$ROOT" ]]; then
+  echo "Directory not found: $ROOT" >&2
+  exit 1
+fi
+
+count_hash_style() {
+  awk '
+    {
+      line=$0
+      gsub(/\r/, "", line)
+      if (line ~ /^[[:space:]]*$/) next
+      if (line ~ /^[[:space:]]*#/) next
+      c++
+    }
+    END { print c+0 }
+  ' "$1"
+}
+
+count_slash_style() {
+  awk '
+    BEGIN { in_block=0 }
+    {
+      line=$0
+      gsub(/\r/, "", line)
+
+      if (in_block) {
+        if (line ~ /\*\//) {
+          sub(/^.*\*\//, "", line)
+          in_block=0
+        } else {
+          next
+        }
+      }
+
+      while (line ~ /\/\*/) {
+        pre=line
+        sub(/\/\*.*$/, "", pre)
+
+        post=line
+        sub(/^.*\/\*/, "", post)
+
+        if (post ~ /\*\//) {
+          sub(/^.*\*\//, "", post)
+          line=pre post
+        } else {
+          line=pre
+          in_block=1
+          break
+        }
+      }
+
+      sub(/[[:space:]]*\/\/.*$/, "", line)
+      if (line ~ /^[[:space:]]*$/) next
+      c++
+    }
+    END { print c+0 }
+  ' "$1"
+}
+
+count_sql_style() {
+  awk '
+    BEGIN { in_block=0 }
+    {
+      line=$0
+      gsub(/\r/, "", line)
+
+      if (in_block) {
+        if (line ~ /\*\//) {
+          sub(/^.*\*\//, "", line)
+          in_block=0
+        } else {
+          next
+        }
+      }
+
+      while (line ~ /\/\*/) {
+        pre=line
+        sub(/\/\*.*$/, "", pre)
+
+        post=line
+        sub(/^.*\/\*/, "", post)
+
+        if (post ~ /\*\//) {
+          sub(/^.*\*\//, "", post)
+          line=pre post
+        } else {
+          line=pre
+          in_block=1
+          break
+        }
+      }
+
+      sub(/[[:space:]]*--.*$/, "", line)
+      if (line ~ /^[[:space:]]*$/) next
+      c++
+    }
+    END { print c+0 }
+  ' "$1"
+}
+
+should_skip_generated() {
+  local f="$1"
+  local head
+  head=$(sed -n '1,80p' "$f" 2>/dev/null || true)
+
+  if [[ "$f" =~ (^|/)backend/migrations/versions/ ]]; then
+    return 0
+  fi
+
+  if [[ "$f" =~ \.min\.(js|css)$ ]]; then
+    return 0
+  fi
+
+  if [[ "$f" =~ (^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$ ]]; then
+    return 0
+  fi
+
+  if grep -Eiq '(@generated|auto[ -]?generated|do not edit|generated file)' <<<"$head"; then
+    return 0
+  fi
+
+  return 1
+}
+
+files=()
+while IFS= read -r -d '' file; do
+  files+=("$file")
+done < <(
+  find "$ROOT" -type f \
+    ! -path '*/.git/*' \
+    ! -path '*/node_modules/*' \
+    ! -path '*/dist/*' \
+    ! -path '*/build/*' \
+    ! -path '*/.venv*/*' \
+    ! -path '*/.venv/*' \
+    ! -path '*/venv/*' \
+    ! -path '*/site-packages/*' \
+    ! -path '*/__pycache__/*' \
+    ! -path '*/.pytest_cache/*' \
+    ! -path '*/.mypy_cache/*' \
+    ! -path '*/coverage/*' \
+    ! -path '*/backend/exports/*' \
+    \( -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.sql' -o -name '*.sh' -o -name '*.zsh' -o -name '*.yml' -o -name '*.yaml' -o -name 'Dockerfile' -o -name 'Makefile' \) \
+    -print0
+)
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "No code files found"
+  exit 0
+fi
+
+results=()
+total=0
+included=0
+
+for file in "${files[@]}"; do
+  if should_skip_generated "$file"; then
+    continue
+  fi
+
+  rel="${file#"$ROOT"/}"
+  ext="${file##*.}"
+
+  case "$ext" in
+    py|sh|zsh|yml|yaml)
+      loc=$(count_hash_style "$file")
+      ;;
+    sql)
+      loc=$(count_sql_style "$file")
+      ;;
+    ts|tsx|js|jsx)
+      loc=$(count_slash_style "$file")
+      ;;
+    *)
+      if [[ "$(basename "$file")" == "Dockerfile" || "$(basename "$file")" == "Makefile" ]]; then
+        loc=$(count_hash_style "$file")
+      else
+        loc=0
+      fi
+      ;;
+  esac
+
+  results+=("$loc|$rel")
+  total=$((total + loc))
+  included=$((included + 1))
+done
+
+printf "%-8s %s\n" "SLOC" "FILE"
+printf "%-8s %s\n" "--------" "----------------------------------------"
+printf "%s\n" "${results[@]}" | sort -t'|' -k1,1nr -k2,2 | while IFS='|' read -r loc path; do
+  printf "%-8s %s\n" "$loc" "$path"
+done
+
+printf "\nFiles counted: %s\n" "$included"
+printf "Total real code (SLOC): %s\n" "$total"

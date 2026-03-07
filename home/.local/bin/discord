@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# quiet + workarounds for Electron on Wayland
+export ELECTRON_DISABLE_SECURITY_WARNINGS=1
+export ELECTRON_ENABLE_LOGGING=false
+export NO_AT_BRIDGE=1
+
+exec /usr/bin/discord \
+  --no-sandbox \
+  --disable-gpu \
+  --disable-extensions \
+  --disable-logging \
+  --ozone-platform-hint=auto \
+  >/dev/null 2>&1 &

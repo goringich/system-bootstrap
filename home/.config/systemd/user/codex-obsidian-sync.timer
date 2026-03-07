@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Codex to Obsidian sync periodically
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=20s
+Persistent=true
+Unit=codex-obsidian-sync.service
+
+[Install]
+WantedBy=timers.target

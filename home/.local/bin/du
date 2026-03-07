@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# du shim: prefer dust when safe; otherwise fallback to coreutils du
+set -euo pipefail
+
+has_opts=false
+for a in "$@"; do
+  case "$a" in
+    -*) has_opts=true; break;;
+  esac
+done
+
+DU_BIN=${DU_BIN:-/usr/bin/du}
+
+if command -v dust >/dev/null 2>&1 && [ "$has_opts" = false ]; then
+  exec dust "$@"
+else
+  exec "$DU_BIN" "$@"
+fi

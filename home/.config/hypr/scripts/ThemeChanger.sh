@@ -14,15 +14,23 @@ require() {
   }
 }
 
-require wallust
 require rofi
+
+if command -v wallust >/dev/null 2>&1; then
+  WALLUST_BIN="$(command -v wallust)"
+elif [[ -x "$HOME/.cargo/bin/wallust" ]]; then
+  WALLUST_BIN="$HOME/.cargo/bin/wallust"
+else
+  echo "wallust binary not found in PATH or ~/.cargo/bin" >&2
+  exit 127
+fi
 
 # notify-send is optional
 have_notify() { command -v notify-send >/dev/null 2>&1; }
 
 # Prompt for theme; guard -e on cancel
 set +e
-choice="$(wallust theme list \
+choice="$("$WALLUST_BIN" theme list \
   | sed -e '1d' -e 's/^- //' \
   | rofi -dmenu -i -p 'Select Global Theme')"
 prompt_status=$?
@@ -37,7 +45,7 @@ fi
 start_ts=$(date +%s)
 
 # Apply the theme and report result
-if wallust theme -- "${choice}"; then
+if "$WALLUST_BIN" theme -- "${choice}"; then
   have_notify && notify-send -a ThemeChanger \
     -h string:x-dunst-stack-tag:themechanger \
     "Global theme changed" "Selected: ${choice}"
@@ -97,19 +105,9 @@ if wallust theme -- "${choice}"; then
 
   # Small cushion before refresh to mirror wallpaper flow
   sleep 0.2
-  # Normalize Rofi selection colors to use the palette's accent (color12)
-  rofi_colors="$HOME/.config/rofi/wallust/colors-rofi.rasi"
-  if [ -f "$rofi_colors" ]; then
-    accent_hex=$(sed -n 's/^\s*color12:\s*\(#[0-9A-Fa-f]\{6\}\).*/\1/p' "$rofi_colors" | head -n1)
-    [ -z "$accent_hex" ] && accent_hex=$(sed -n 's/^\s*color13:\s*\(#[0-9A-Fa-f]\{6\}\).*/\1/p' "$rofi_colors" | head -n1)
-    if [ -n "$accent_hex" ]; then
-      sed -i -E "s|^(\s*selected-normal-background:\s*).*$|\1$accent_hex;|" "$rofi_colors"
-      sed -i -E "s|^(\s*selected-active-background:\s*).*$|\1$accent_hex;|" "$rofi_colors"
-      sed -i -E "s|^(\s*selected-urgent-background:\s*).*$|\1$accent_hex;|" "$rofi_colors"
-      sed -i -E "s|^(\s*selected-normal-foreground:\s*).*$|\1#000000;|" "$rofi_colors"
-      sed -i -E "s|^(\s*selected-active-foreground:\s*).*$|\1#000000;|" "$rofi_colors"
-      sed -i -E "s|^(\s*selected-urgent-foreground:\s*).*$|\1#000000;|" "$rofi_colors"
-    fi
+  # Contrast polish for generated wallust files (Waybar/Rofi)
+  if [ -x "$HOME/.config/hypr/scripts/WallustPolish.sh" ]; then
+    "$HOME/.config/hypr/scripts/WallustPolish.sh" || true
   fi
 
   # Reload Hyprland so new border colors from wallust-hyprland.conf take effect

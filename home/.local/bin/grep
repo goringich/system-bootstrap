@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# grep shim: prefer ripgrep when safe; otherwise fallback to GNU grep
+set -euo pipefail
+
+has_opts=false
+for a in "$@"; do
+  case "$a" in
+    -*) has_opts=true; break;;
+  esac
+done
+
+GREP_BIN=${GREP_BIN:-/usr/bin/grep}
+
+if command -v rg >/dev/null 2>&1 && [ "$has_opts" = false ]; then
+  # mimic grep defaults: case-sensitive, no colors, show line numbers only when -n
+  exec rg --color=never "$@"
+else
+  exec "$GREP_BIN" "$@"
+fi

@@ -152,6 +152,17 @@
 	"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",
 	"smooth-scrolling-threshold": 1,
 },
+
+"custom/gpu_status": {
+	"format": "{}",
+	"return-type": "json",
+	"interval": 4,
+	"exec-if": "command -v nvidia-smi >/dev/null 2>&1",
+	"exec": "$HOME/.config/hypr/scripts/WaybarGpu.sh",
+	"on-click": "kitty -e nvtop",
+	"on-click-right": "$HOME/.config/hypr/scripts/WaybarScripts.sh --sensors",
+	"tooltip": true
+},
     
 "custom/power": {
 	"format": " ⏻ ",

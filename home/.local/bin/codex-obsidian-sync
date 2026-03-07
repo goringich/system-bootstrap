@@ -1,0 +1,368 @@
+#!/usr/bin/env python3
+import json
+import re
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+SESSIONS_ROOT = Path('/home/goringich/.codex/sessions')
+OUT_ROOT = Path('/home/goringich/Desktop/Obsidian/codex-conversations')
+VAULT_ROOT = Path('/home/goringich/Desktop/Obsidian')
+STATE_FILE = Path('/home/goringich/.local/state/codex-obsidian-sync/state.json')
+
+
+@dataclass
+class Msg:
+    role: str
+    text: str
+    ts: str
+
+
+LINK_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+NOISE_PATTERNS = (
+    'AGENTS.md instructions for',
+    '<INSTRUCTIONS>',
+    '<environment_context>',
+    '<turn_aborted>',
+)
+CYRILLIC_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e', 'ж': 'zh',
+    'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
+    'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts',
+    'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu',
+    'я': 'ya',
+}
+
+
+def extract_text(content):
+    parts = []
+    if not isinstance(content, list):
+        return ''
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        t = item.get('type')
+        if t in ('input_text', 'output_text'):
+            txt = item.get('text', '')
+            if isinstance(txt, str) and txt:
+                parts.append(txt)
+    return '\n\n'.join(parts).strip()
+
+
+def parse_session(path: Path):
+    messages = []
+    session_id = path.stem
+    session_ts = ''
+
+    with path.open('r', encoding='utf-8', errors='replace') as f:
+        for raw in f:
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                row = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+
+            rtype = row.get('type')
+            payload = row.get('payload', {})
+
+            if rtype == 'session_meta' and isinstance(payload, dict):
+                sid = payload.get('id')
+                if isinstance(sid, str) and sid:
+                    session_id = sid
+                sts = payload.get('timestamp')
+                if isinstance(sts, str):
+                    session_ts = sts
+
+            if rtype != 'response_item' or not isinstance(payload, dict):
+                continue
+
+            if payload.get('type') != 'message':
+                continue
+
+            role = payload.get('role')
+            if role not in ('user', 'assistant'):
+                continue
+
+            text = extract_text(payload.get('content'))
+            if not text:
+                continue
+
+            ts = row.get('timestamp', '')
+            messages.append(Msg(role=role, text=text, ts=ts))
+
+    return session_id, session_ts, messages
+
+
+def cleanup_text(text: str) -> str:
+    return re.sub(r'\s+', ' ', text.strip())
+
+
+def is_noise_question(text: str) -> bool:
+    for p in NOISE_PATTERNS:
+        if p in text:
+            return True
+    return False
+
+
+def pick_topic(messages) -> str:
+    for m in messages:
+        if m.role != 'user':
+            continue
+        t = cleanup_text(m.text)
+        if not t:
+            continue
+        if is_noise_question(t):
+            continue
+        return t[:90]
+    return 'conversation'
+
+
+def slugify(text: str, max_len: int = 64) -> str:
+    out = []
+    for ch in text.lower():
+        if 'a' <= ch <= 'z' or '0' <= ch <= '9':
+            out.append(ch)
+            continue
+        if ch in CYRILLIC_MAP:
+            out.append(CYRILLIC_MAP[ch])
+            continue
+        if ch in (' ', '-', '_', '/', '\\', '.', ',', ':', ';', '!', '?', '(', ')', '[', ']', '{', '}', '+', '=', '"', "'", '`'):
+            out.append('-')
+            continue
+    slug = re.sub(r'-+', '-', ''.join(out)).strip('-')
+    if not slug:
+        slug = 'conversation'
+    return slug[:max_len].strip('-') or 'conversation'
+
+
+def pick_date_str(session_ts: str, src: Path) -> str:
+    if session_ts:
+        try:
+            dt = datetime.fromisoformat(session_ts.replace('Z', '+00:00'))
+            return dt.date().isoformat()
+        except Exception:
+            pass
+    # fallback from source path: YYYY/MM/DD/file.jsonl
+    parts = src.parts
+    if len(parts) >= 4:
+        return f'{parts[0]}-{parts[1]}-{parts[2]}'
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def build_output_rel(src: Path, session_id: str, session_ts: str, messages) -> Path:
+    topic = pick_topic(messages)
+    slug = slugify(topic)
+    date_str = pick_date_str(session_ts, src)
+    parts = src.parts
+    if len(parts) >= 4:
+        prefix = Path(parts[0]) / parts[1] / parts[2]
+    else:
+        prefix = Path(date_str[:4]) / date_str[5:7] / date_str[8:10]
+    filename = f'{date_str}--{slug}--{session_id}.md'
+    return prefix / filename
+
+
+def sanitize_links(text: str) -> str:
+    """Keep only Obsidian-internal links as wiki links, flatten others to text."""
+    def _repl(match):
+        label = match.group(1).strip()
+        target = match.group(2).strip()
+
+        # Already wiki-style or local anchor-like forms, keep as plain label.
+        if target.startswith('#'):
+            return label
+
+        # Convert absolute/relative markdown file links inside Obsidian vault to wiki links.
+        p = Path(target)
+        try:
+            resolved = p.resolve() if p.is_absolute() else (VAULT_ROOT / p).resolve()
+        except Exception:
+            resolved = None
+
+        if resolved is not None:
+            try:
+                rel = resolved.relative_to(VAULT_ROOT)
+                if rel.suffix.lower() == '.md':
+                    return f'[[{rel.with_suffix("").as_posix()}|{label}]]'
+            except Exception:
+                pass
+
+        # Any other link becomes readable plain text instead of noisy markdown link.
+        if label == target:
+            return label
+        return f'{label} ({target})'
+
+    return LINK_RE.sub(_repl, text)
+
+
+def build_markdown(session_id: str, session_ts: str, src: Path, out_rel: Path, messages):
+    turns = []
+    current = None
+
+    for m in messages:
+        if m.role == 'user':
+            if current is not None:
+                turns.append(current)
+            current = {'q': m.text, 'q_ts': m.ts, 'a': [], 'a_ts': []}
+        elif m.role == 'assistant' and current is not None:
+            current['a'].append(m.text)
+            current['a_ts'].append(m.ts)
+
+    if current is not None:
+        turns.append(current)
+
+    filtered = []
+    for t in turns:
+        q_clean = cleanup_text(t.get('q', ''))
+        has_ans = bool(''.join(t.get('a', [])).strip())
+        if is_noise_question(q_clean) and not has_ans:
+            continue
+        filtered.append(t)
+    turns = filtered
+
+    topic = pick_topic(messages)
+    title = f'{topic} - Codex Conversation'
+    lines = [f'# {title}', '']
+    lines.append(f'> [!info] Session')
+    lines.append(f'- Session ID: `{session_id}`')
+    if session_ts:
+        lines.append(f'- Started: `{session_ts}`')
+    lines.append(f'- Source: `{src}`')
+    lines.append(f'- File: `{out_rel}`')
+    lines.append(f'- Exported: `{datetime.now(timezone.utc).isoformat()}`')
+    lines.append('')
+
+    lines.append('## Navigation')
+    lines.append('')
+    note_name = out_rel.with_suffix('').as_posix()
+    for i, _ in enumerate(turns, start=1):
+        n = f'{i:03d}'
+        lines.append(f'- [[{note_name}#Q{n}|Q{n}]] -> [[{note_name}#A{n}|A{n}]]')
+    if not turns:
+        lines.append('- No user/assistant messages parsed yet.')
+    lines.append('')
+
+    for i, t in enumerate(turns, start=1):
+        n = f'{i:03d}'
+        q_text = sanitize_links(t['q'])
+        ans = sanitize_links('\n\n---\n\n'.join(t['a']).strip())
+        if not ans:
+            ans = '_No assistant reply captured for this question._'
+
+        lines.append(f'## Q{n}')
+        lines.append('')
+        if t.get('q_ts'):
+            lines.append(f'**My question ({t["q_ts"]}):**')
+        else:
+            lines.append('**My question:**')
+        lines.append('')
+        lines.append(q_text)
+        lines.append('')
+
+        lines.append(f'## A{n}')
+        lines.append('')
+        if t.get('a_ts'):
+            lines.append(f'**Codex answer ({t["a_ts"][-1]}):**')
+        else:
+            lines.append('**Codex answer:**')
+        lines.append('')
+        lines.append(ans)
+        lines.append('')
+        lines.append(f'Back: [[{note_name}#Navigation|Navigation]]')
+        lines.append('')
+
+    return '\n'.join(lines)
+
+
+def load_state():
+    if not STATE_FILE.exists():
+        return {}
+    try:
+        return json.loads(STATE_FILE.read_text(encoding='utf-8'))
+    except Exception:
+        return {}
+
+
+def save_state(state):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding='utf-8')
+
+
+def write_index():
+    lines = ['# Codex Conversations Index', '']
+    lines.append(f'- Updated: `{datetime.now(timezone.utc).isoformat()}`')
+    lines.append('')
+
+    entries = []
+    for md in sorted(OUT_ROOT.rglob('*.md')):
+        if md.name == 'index.md':
+            continue
+        rel = md.relative_to(OUT_ROOT)
+        wiki = rel.with_suffix('').as_posix()
+        ts = datetime.fromtimestamp(md.stat().st_mtime, tz=timezone.utc).isoformat()
+        title = md.stem
+        entries.append((rel.as_posix(), wiki, ts, title))
+
+    if not entries:
+        lines.append('- No conversation files yet.')
+    else:
+        for rel_path, wiki, ts, title in entries:
+            lines.append(f'- [[{wiki}|{title}]]  `{ts}`')
+            lines.append(f'  - `{rel_path}`')
+
+    lines.append('')
+    (OUT_ROOT / 'index.md').write_text('\n'.join(lines), encoding='utf-8')
+
+
+def main():
+    OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    old_state = load_state()
+    new_state = {}
+
+    if not SESSIONS_ROOT.exists():
+        save_state(new_state)
+        return
+
+    for src in sorted(SESSIONS_ROOT.rglob('*.jsonl')):
+        try:
+            stat = src.stat()
+        except FileNotFoundError:
+            continue
+
+        rel = src.relative_to(SESSIONS_ROOT)
+        key = str(src)
+        mtime = stat.st_mtime_ns
+        sid, sts, msgs = parse_session(src)
+        out_rel = build_output_rel(rel, sid, sts, msgs)
+        out = OUT_ROOT / out_rel
+
+        prev = old_state.get(key, {})
+        if isinstance(prev, int):
+            prev_mtime = prev
+            prev_out_rel = ''
+        else:
+            prev_mtime = prev.get('mtime')
+            prev_out_rel = prev.get('out_rel', '')
+
+        new_state[key] = {'mtime': mtime, 'out_rel': out_rel.as_posix()}
+
+        if prev_mtime == mtime and prev_out_rel == out_rel.as_posix() and out.exists():
+            continue
+
+        if prev_out_rel and prev_out_rel != out_rel.as_posix():
+            old_out = OUT_ROOT / prev_out_rel
+            if old_out.exists():
+                old_out.unlink()
+
+        out.parent.mkdir(parents=True, exist_ok=True)
+        md = build_markdown(sid, sts, rel, out_rel, msgs)
+        out.write_text(md, encoding='utf-8')
+
+    write_index()
+    save_state(new_state)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,73 @@
+@import "~/.config/rofi/config.rasi"
+
+configuration {
+    modi: "combi,drun,run,window,filebrowser";
+    combi-modi: "drun,run,window,filebrowser";
+    show-icons: true;
+    display-combi: "all";
+    display-drun: "apps";
+    display-run: "cmd";
+    display-window: "win";
+    display-filebrowser: "files";
+    drun-display-format: "{name}";
+    window-format: "{w} · {t}";
+    sorting-method: "fzf";
+    hover-select: true;
+    cycle: true;
+}
+
+window {
+    width: 62%;
+    border: 2px;
+    border-radius: 20px;
+}
+
+mainbox {
+    children: [ "inputbar", "mode-switcher", "listview", "message" ];
+    spacing: 16px;
+    padding: 20px;
+}
+
+inputbar {
+    children: [ "textbox-prompt-colon", "entry", "case-indicator" ];
+    padding: 14px 18px;
+}
+
+textbox-prompt-colon {
+    str: " 🔎";
+}
+
+entry {
+    placeholder: "Apps, commands, windows, files";
+}
+
+mode-switcher {
+    spacing: 12px;
+}
+
+button {
+    border-radius: 999px;
+    padding: 10px 16px;
+}
+
+listview {
+    lines: 14;
+    columns: 2;
+    fixed-height: true;
+    fixed-columns: true;
+    spacing: 12px;
+}
+
+element {
+    border-radius: 14px;
+    padding: 14px;
+}
+
+element-icon {
+    size: 2.2em;
+}
+
+message {
+    enabled: true;
+    padding: 6px 10px 2px;
+}
