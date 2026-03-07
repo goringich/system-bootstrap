@@ -16,12 +16,19 @@ cd system-bootstrap
 cd system-bootstrap
 ./bin/restore-my-system --dry-run --skip-aur
 ./bin/restore-my-system --skip-aur
+./bin/restore-my-system --profile minimal --dry-run
 ```
 
 `restore-my-system`:
 - применяет `system-bootstrap`
 - затем дотягивает твои GitHub-репозитории из `configs/repos.txt`
 - не трогает dirty-репозитории при обновлении
+
+## Профили
+
+- `full` — всё, что описано в `system-bootstrap`
+- `desktop` — профиль по умолчанию, сейчас пропускает AUR на первом проходе
+- `minimal` — облегчённый bring-up без AUR и без systemd service enable, с урезанным repo manifest
 
 ## Что ставится
 
@@ -30,6 +37,8 @@ cd system-bootstrap
 - `manifests/enabled-services.txt` — включенные systemd-сервисы
 - `home/` — снимок пользовательских конфигов, тем, скриптов и `.local/bin`
 - `configs/repos.txt` — репозитории, которые нужно автоматически дотянуть после bootstrap
+- `configs/repos-minimal.txt` — урезанный manifest для минимального подъёма
+- `configs/profiles/*.sh` — профили one-command bootstrap
 
 ## Обновить снимок с текущей машины
 
@@ -54,6 +63,7 @@ cd system-bootstrap
 - `--dry-run` показывает, что будет выполнено, без применения изменений
 - `TARGET_HOME=/path/to/test-home ./install.sh --dry-run` позволяет прогонять восстановление на отдельной директории
 - `clone-repos.sh` пропускает dirty-репозитории и не делает force update
+- `restore-my-system --profile minimal` даёт более осторожный первый проход
 
 ## Ограничения
 

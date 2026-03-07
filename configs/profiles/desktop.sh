@@ -1,0 +1,3 @@
+PROFILE_NAME="desktop"
+PROFILE_INSTALL_ARGS=(--skip-aur)
+PROFILE_REPO_MANIFEST="$REPO_ROOT/configs/repos.txt"
