@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Codex Agent Queue Status
+Comment=Show Codex orchestration queue status
+Exec=kitty --hold bash -lc "$HOME/.local/bin/codex-agent-status"
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;System;
+StartupNotify=true

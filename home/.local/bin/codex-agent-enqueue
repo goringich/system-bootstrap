@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RUNTIME_ROOT="${CODEX_ORCHESTRATOR_ROOT:-$HOME/__home_organized/runtime/codex-orchestrator}"
+QUEUE_DIR="$RUNTIME_ROOT/queue"
+mkdir -p "$QUEUE_DIR"
+
+title=""
+workdir="$HOME"
+sandbox="workspace-write"
+skip_git_repo_check="false"
+declare -a add_dirs=()
+prompt_file=""
+
+usage() {
+  cat <<USAGE
+Usage:
+  codex-agent-enqueue --title NAME --workdir DIR [--sandbox MODE] [--add-dir DIR ...] [--prompt-file FILE]
+  codex-agent-enqueue --title NAME --workdir DIR < prompt.txt
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --title) title="$2"; shift 2 ;;
+    --workdir) workdir="$2"; shift 2 ;;
+    --sandbox) sandbox="$2"; shift 2 ;;
+    --add-dir) add_dirs+=("$2"); shift 2 ;;
+    --skip-git-repo-check) skip_git_repo_check="true"; shift ;;
+    --prompt-file) prompt_file="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+[[ -n "$title" ]] || {
+  echo "Missing --title" >&2
+  exit 1
+}
+
+safe_title="$(printf '%s' "$title" | tr ' ' '-' | tr -cd '[:alnum:]-_')"
+task_id="$(date +%Y%m%d-%H%M%S)-$safe_title"
+task_path="$QUEUE_DIR/$task_id.task"
+
+{
+  printf 'title: %s\n' "$title"
+  printf 'workdir: %s\n' "$workdir"
+  printf 'sandbox: %s\n' "$sandbox"
+  printf 'skip_git_repo_check: %s\n' "$skip_git_repo_check"
+  for dir in "${add_dirs[@]}"; do
+    printf 'add_dir: %s\n' "$dir"
+  done
+  printf '%s\n' '---'
+  if [[ -n "$prompt_file" ]]; then
+    cat "$prompt_file"
+  else
+    cat
+  fi
+} > "$task_path"
+
+printf 'Queued task: %s\n' "$task_path"

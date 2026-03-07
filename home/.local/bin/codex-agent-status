@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RUNTIME_ROOT="${CODEX_ORCHESTRATOR_ROOT:-$HOME/__home_organized/runtime/codex-orchestrator}"
+ARTIFACT_ROOT="${CODEX_ORCHESTRATOR_ARTIFACTS:-$HOME/__home_organized/artifacts/codex-orchestrator}"
+LOG_ROOT="${CODEX_ORCHESTRATOR_LOGS:-$HOME/__home_organized/logs/codex-orchestrator}"
+
+for dir in "$RUNTIME_ROOT/queue" "$RUNTIME_ROOT/claims" "$RUNTIME_ROOT/done" "$RUNTIME_ROOT/failed" "$ARTIFACT_ROOT" "$LOG_ROOT"; do
+  mkdir -p "$dir"
+done
+
+printf 'Queue:\n'
+find "$RUNTIME_ROOT/queue" -maxdepth 1 -type f | sort | sed 's#^.*/##' || true
+printf '\nRunning:\n'
+find "$RUNTIME_ROOT/claims" -maxdepth 1 -type f | sort | sed 's#^.*/##' || true
+printf '\nDone:\n'
+find "$RUNTIME_ROOT/done" -maxdepth 1 -type f | sort | tail -n 10 | sed 's#^.*/##' || true
+printf '\nFailed:\n'
+find "$RUNTIME_ROOT/failed" -maxdepth 1 -type f | sort | tail -n 10 | sed 's#^.*/##' || true
+printf '\nRecent artifacts:\n'
+find "$ARTIFACT_ROOT" -maxdepth 1 -mindepth 1 -type d | sort | tail -n 10 | sed 's#^.*/##' || true

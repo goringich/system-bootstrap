@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Codex Agent Run Queue
+Comment=Run one queued Codex orchestration task
+Exec=kitty --hold bash -lc "$HOME/.local/bin/codex-agent-run"
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;System;
+StartupNotify=true

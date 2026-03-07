@@ -24,6 +24,20 @@ cd system-bootstrap
 - затем дотягивает твои GitHub-репозитории из `configs/repos.txt`
 - не трогает dirty-репозитории при обновлении
 
+## Codex Orchestrator
+
+Локальный orchestration layer для фоновых Codex worker-задач:
+- `~/.local/bin/codex-agent-enqueue`
+- `~/.local/bin/codex-agent-run`
+- `~/.local/bin/codex-agent-status`
+- `~/.config/systemd/user/codex-agent-orchestrator.timer`
+- manager prompt: `~/.config/codex-orchestrator/manager-prompt.txt`
+
+Runtime и логи лежат вне home root:
+- `__home_organized/runtime/codex-orchestrator`
+- `__home_organized/logs/codex-orchestrator`
+- `__home_organized/artifacts/codex-orchestrator`
+
 ## Профили
 
 - `full` — всё, что описано в `system-bootstrap`
