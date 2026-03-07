@@ -1,3 +1,4 @@
 # name|repo_url|destination|branch
 system-bootstrap|git@github.com:goringich/system-bootstrap.git|$HOME/system-bootstrap|main
+codex-orchestrator|git@github.com:goringich/codex-orchestrator.git|$HOME/codex-orchestrator|main
 Obsidian|git@github.com:goringich/Obsidian.git|$HOME/Desktop/Obsidian|master
