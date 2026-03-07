@@ -10,12 +10,26 @@ cd system-bootstrap
 ./install.sh
 ```
 
+## Один вход
+
+```bash
+cd system-bootstrap
+./bin/restore-my-system --dry-run --skip-aur
+./bin/restore-my-system --skip-aur
+```
+
+`restore-my-system`:
+- применяет `system-bootstrap`
+- затем дотягивает твои GitHub-репозитории из `configs/repos.txt`
+- не трогает dirty-репозитории при обновлении
+
 ## Что ставится
 
 - `manifests/pacman-explicit-non-system.txt` — все явно установленные пакеты кроме системной базы
 - `manifests/aur-explicit.txt` — AUR пакеты
 - `manifests/enabled-services.txt` — включенные systemd-сервисы
-- `home/` — снимок пользовательских конфигов, тем, и скриптов
+- `home/` — снимок пользовательских конфигов, тем, скриптов и `.local/bin`
+- `configs/repos.txt` — репозитории, которые нужно автоматически дотянуть после bootstrap
 
 ## Обновить снимок с текущей машины
 
@@ -39,6 +53,7 @@ cd system-bootstrap
 - перед наливкой `home/` делается backup текущих файлов в `~/.system-bootstrap-backups/`
 - `--dry-run` показывает, что будет выполнено, без применения изменений
 - `TARGET_HOME=/path/to/test-home ./install.sh --dry-run` позволяет прогонять восстановление на отдельной директории
+- `clone-repos.sh` пропускает dirty-репозитории и не делает force update
 
 ## Ограничения
 

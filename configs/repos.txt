@@ -1,0 +1,6 @@
+# name|repo_url|destination|branch
+system-bootstrap|git@github.com:goringich/system-bootstrap.git|$HOME/system-bootstrap|main
+custom-cachyos-iso|git@github.com:goringich/my-custom-cachyos-iso.git|$HOME/custom-cachyos-iso|master
+Obsidian|git@github.com:goringich/Obsidian.git|$HOME/Desktop/Obsidian|master
+elizabet|git@github.com:goringich/elizabet.git|$HOME/Desktop/elizabet|develop
+otlichniy-ulov|git@github.com:goringich/otlichniy-ulov.git|$HOME/Desktop/otlichniy-ulov|master
