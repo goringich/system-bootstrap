@@ -65,4 +65,13 @@ if [[ "$SKIP_REPOS" -eq 0 ]]; then
   bash "$REPO_ROOT/scripts/clone-repos.sh" "${repo_args[@]}"
 fi
 
+if [[ -x "$HOME/codex-orchestrator/install.sh" ]]; then
+  echo "==> Installing codex-orchestrator into user environment"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    printf '[dry-run] bash %q\n' "$HOME/codex-orchestrator/install.sh"
+  else
+    bash "$HOME/codex-orchestrator/install.sh"
+  fi
+fi
+
 echo "==> Bootstrap host flow complete"
