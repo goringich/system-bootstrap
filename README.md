@@ -30,7 +30,15 @@ cd system-bootstrap
 ./install.sh --skip-aur
 ./install.sh --skip-configs
 ./install.sh --skip-packages
+./install.sh --dry-run
+./install.sh --no-backup
 ```
+
+## Safety Rails
+
+- перед наливкой `home/` делается backup текущих файлов в `~/.system-bootstrap-backups/`
+- `--dry-run` показывает, что будет выполнено, без применения изменений
+- `TARGET_HOME=/path/to/test-home ./install.sh --dry-run` позволяет прогонять восстановление на отдельной директории
 
 ## Ограничения
 
