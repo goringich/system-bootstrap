@@ -61,3 +61,5 @@ verify-gpu-after-reboot.sh
 .config/xfce4
 
 .local/bin
+
+.local/share/applications/system-bootstrap-dry-run.desktop

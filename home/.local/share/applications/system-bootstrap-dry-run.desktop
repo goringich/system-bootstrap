@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=System Bootstrap Dry Run
+Comment=Preview full system bootstrap without applying changes
+Exec=kitty --hold bash -lc "$HOME/system-bootstrap/bin/restore-my-system --dry-run --skip-aur"
+Icon=utilities-terminal
+Terminal=false
+Categories=System;Utility;
+StartupNotify=true
