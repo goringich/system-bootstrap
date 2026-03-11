@@ -8,6 +8,7 @@ INSTALL_ARGS=()
 PROFILE="desktop"
 PROFILE_INSTALL_ARGS=()
 PROFILE_REPO_MANIFEST="$REPO_ROOT/configs/repos.txt"
+REPORT_FILE="${SYSTEM_BOOTSTRAP_REPORT_FILE:-$HOME/.local/state/system-bootstrap/restore-report.txt}"
 
 usage() {
   cat <<USAGE
@@ -71,6 +72,21 @@ if [[ -x "$HOME/codex-orchestrator/install.sh" ]]; then
     printf '[dry-run] bash %q\n' "$HOME/codex-orchestrator/install.sh"
   else
     bash "$HOME/codex-orchestrator/install.sh"
+  fi
+fi
+
+if [[ -x "$REPO_ROOT/scripts/restore-audit.sh" ]]; then
+  echo "==> Writing restore audit report"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    printf '[dry-run] bash %q %q %q %q\n' \
+      "$REPO_ROOT/scripts/restore-audit.sh" \
+      "${USER:-goringich}" \
+      "$REPORT_FILE" \
+      "$HOME"
+  else
+    mkdir -p "$(dirname "$REPORT_FILE")"
+    SYSTEM_BOOTSTRAP_REPO_MANIFEST="$PROFILE_REPO_MANIFEST" \
+      bash "$REPO_ROOT/scripts/restore-audit.sh" "${USER:-goringich}" "$REPORT_FILE" "$HOME"
   fi
 fi
 

@@ -22,6 +22,7 @@ cd system-bootstrap
 `restore-my-system`:
 - применяет `system-bootstrap`
 - затем дотягивает твои GitHub-репозитории из `configs/repos.txt`
+- затем пишет restore audit в `~/.local/state/system-bootstrap/restore-report.txt`
 - не трогает dirty-репозитории при обновлении
 
 ## Codex Orchestrator
@@ -78,6 +79,7 @@ Runtime и логи лежат вне home root:
 - `TARGET_HOME=/path/to/test-home ./install.sh --dry-run` позволяет прогонять восстановление на отдельной директории
 - `clone-repos.sh` пропускает dirty-репозитории и не делает force update
 - `restore-my-system --profile minimal` даёт более осторожный первый проход
+- после host restore пишется отчёт `~/.local/state/system-bootstrap/restore-report.txt` с пробелами по repo hydration, ключевым путям и user services
 
 ## Ограничения
 
