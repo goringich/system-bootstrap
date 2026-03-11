@@ -100,13 +100,13 @@ for rel_path in "${key_paths[@]}"; do
 done
 
 report ""
-report "[user-services]"
+report "[services]"
 if [[ -f "$SERVICES_MANIFEST" ]] && command -v systemctl >/dev/null 2>&1; then
   while IFS= read -r svc; do
     [[ -n "${svc:-}" ]] || continue
     [[ "$svc" =~ ^# ]] && continue
 
-    if systemctl --user is-enabled "$svc" >/dev/null 2>&1; then
+    if systemctl is-enabled "$svc" >/dev/null 2>&1; then
       report "ok       $svc"
     else
       report "disabled $svc"
