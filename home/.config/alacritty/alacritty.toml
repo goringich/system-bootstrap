@@ -139,6 +139,16 @@ mods = "Control|Shift"
 action = "Copy"
 
 [[keyboard.bindings]]
+key = "М"
+mods = "Control|Shift"
+action = "Paste"
+
+[[keyboard.bindings]]
+key = "С"
+mods = "Control|Shift"
+action = "Copy"
+
+[[keyboard.bindings]]
 key = "F"
 mods = "Control|Shift"
 action = "SearchForward"

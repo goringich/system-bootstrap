@@ -58,6 +58,7 @@ dmidecode
 dmraid
 dnsmasq
 docker
+docker-buildx
 docker-compose
 dog
 dolphin
@@ -127,6 +128,7 @@ iptables-nft
 iwd
 jfsutils
 kitty
+keyd
 lazygit
 less
 lf

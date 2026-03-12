@@ -91,6 +91,10 @@ config.keys = {
   { key = "RightArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Right") },
   { key = "UpArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Up") },
   { key = "DownArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Down") },
+
+  -- Terminal clipboard shortcuts on Russian layout
+  { key = "с", mods = "CTRL|SHIFT", action = wezterm.action.CopyTo("Clipboard") },
+  { key = "м", mods = "CTRL|SHIFT", action = wezterm.action.PasteFrom("Clipboard") },
 }
 
 -- Disable missing glyph warnings, since we have fallback fonts now
