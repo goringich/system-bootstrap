@@ -16,6 +16,7 @@ enable-codex-root-nopasswd.sh
 fix-keyd-shortcuts-root.sh
 fix-hypr-sessions-root.sh
 fix-nvidia-stable-root.sh
+install-docker-mcp-plugin.sh
 verify-gpu-after-reboot.sh
 
 # Themes/icons
