@@ -30,6 +30,7 @@ repo_missing=0
 repo_dirty=0
 repo_branch_gap=0
 path_missing=0
+payload_missing=0
 service_gap=0
 total_gaps=0
 
@@ -82,8 +83,13 @@ fi
 report ""
 report "[paths]"
 key_paths=(
+  ".zshrc"
   ".config/hypr"
   ".config/rofi"
+  ".config/kitty"
+  ".config/ghostty"
+  ".config/wezterm"
+  ".config/alacritty"
   ".config/waybar"
   ".config/systemd/user"
   ".local/bin"
@@ -95,6 +101,18 @@ for rel_path in "${key_paths[@]}"; do
   else
     report "missing  $rel_path"
     path_missing=$((path_missing + 1))
+    total_gaps=$((total_gaps + 1))
+  fi
+done
+
+report ""
+report "[payload]"
+for rel_path in "${key_paths[@]}"; do
+  if [[ -e "$REPO_ROOT/home/$rel_path" ]]; then
+    report "ok       $rel_path"
+  else
+    report "missing  $rel_path"
+    payload_missing=$((payload_missing + 1))
     total_gaps=$((total_gaps + 1))
   fi
 done
@@ -124,5 +142,6 @@ report "repo_missing=$repo_missing"
 report "repo_dirty=$repo_dirty"
 report "repo_branch_gap=$repo_branch_gap"
 report "path_missing=$path_missing"
+report "payload_missing=$payload_missing"
 report "service_gap=$service_gap"
 report "total_gaps=$total_gaps"
