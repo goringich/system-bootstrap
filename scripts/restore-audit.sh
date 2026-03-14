@@ -83,6 +83,7 @@ fi
 report ""
 report "[paths]"
 key_paths=(
+  ".codex/config.toml"
   ".zshrc"
   ".config/hypr"
   ".config/rofi"

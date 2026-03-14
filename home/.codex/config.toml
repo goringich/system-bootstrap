@@ -1,0 +1,49 @@
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[projects."/home/goringich"]
+trust_level = "trusted"
+
+[projects."/home/goringich/Desktop"]
+trust_level = "trusted"
+
+[projects."/home/goringich/Desktop/otlichniy-ulov"]
+trust_level = "trusted"
+
+[projects."/home/goringich/custom-cachyos-iso"]
+trust_level = "trusted"
+
+[projects."/home/goringich/Desktop/elizabet"]
+trust_level = "trusted"
+
+[projects."/home/goringich/esp/hello_world_p4"]
+trust_level = "trusted"
+
+[projects."/home/goringich/Desktop/Obsidian"]
+trust_level = "trusted"
+
+[notice.model_migrations]
+"gpt-5.2-codex" = "gpt-5.3-codex"
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.context7]
+command = "/home/goringich/__home_organized/scripts/codex-mcp/context7.sh"
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+startup_timeout_sec = 20
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/home/goringich", "/home/goringich/Desktop/Obsidian", "/home/goringich/__home_organized"]
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
