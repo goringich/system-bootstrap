@@ -1,0 +1,14 @@
+[Unit]
+Description=Keep integrated Bluetooth USB adapter awake
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo on > /sys/bus/usb/devices/1-12/power/control'
+ExecStart=/bin/sh -c 'echo on > /sys/bus/usb/devices/1-12/power/control || true'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=bluetooth.service

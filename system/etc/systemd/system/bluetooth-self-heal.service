@@ -1,0 +1,7 @@
+[Unit]
+Description=Recover integrated Bluetooth adapter if it becomes unavailable
+After=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/__home_organized/scripts/bluetooth-self-heal.sh

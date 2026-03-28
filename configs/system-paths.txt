@@ -1,0 +1,6 @@
+etc/modprobe.d/btusb-local.conf
+etc/systemd/system/bluetooth-usb-awake.service
+etc/systemd/system/bluetooth-self-heal.service
+etc/systemd/system/bluetooth-self-heal.timer
+etc/systemd/system/bluetooth.service.d/restart.conf
+etc/udev/rules.d/99-bluetooth-no-autosuspend.rules

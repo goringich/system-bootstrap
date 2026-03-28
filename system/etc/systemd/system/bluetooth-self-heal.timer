@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Bluetooth self-heal periodically
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=90s
+Unit=bluetooth-self-heal.service
+
+[Install]
+WantedBy=timers.target

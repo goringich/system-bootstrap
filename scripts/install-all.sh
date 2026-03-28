@@ -4,11 +4,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFESTS_DIR="$REPO_ROOT/manifests"
 HOME_SNAPSHOT_DIR="$REPO_ROOT/home"
+SYSTEM_SNAPSHOT_DIR="$REPO_ROOT/system"
 TARGET_HOME="${TARGET_HOME:-$HOME}"
 
 usage() {
   cat <<USAGE
-Usage: ./install.sh [--skip-packages] [--skip-aur] [--skip-configs] [--skip-services] [--dry-run] [--no-backup]
+Usage: ./install.sh [--skip-packages] [--skip-aur] [--skip-configs] [--skip-services] [--skip-system-overlay] [--dry-run] [--no-backup]
 USAGE
 }
 
@@ -23,6 +24,7 @@ SKIP_PACKAGES=0
 SKIP_AUR=0
 SKIP_CONFIGS=0
 SKIP_SERVICES=0
+SKIP_SYSTEM_OVERLAY=0
 DRY_RUN=0
 DO_BACKUP=1
 BACKUP_ROOT="${BACKUP_ROOT:-$TARGET_HOME/.system-bootstrap-backups}"
@@ -34,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --skip-aur) SKIP_AUR=1 ;;
     --skip-configs) SKIP_CONFIGS=1 ;;
     --skip-services) SKIP_SERVICES=1 ;;
+    --skip-system-overlay) SKIP_SYSTEM_OVERLAY=1 ;;
     --dry-run) DRY_RUN=1 ;;
     --no-backup) DO_BACKUP=0 ;;
     -h|--help)
@@ -133,6 +136,13 @@ if [[ "$SKIP_CONFIGS" -eq 0 ]]; then
   if [[ -d "$HOME_SNAPSHOT_DIR" ]]; then
     backup_existing_configs
     run_cmd rsync -a "$HOME_SNAPSHOT_DIR/" "$TARGET_HOME/"
+  fi
+fi
+
+if [[ "$SKIP_SYSTEM_OVERLAY" -eq 0 ]]; then
+  echo "==> Restoring system overlay snapshot"
+  if [[ -d "$SYSTEM_SNAPSHOT_DIR" ]]; then
+    run_cmd sudo rsync -a "$SYSTEM_SNAPSHOT_DIR/" /
   fi
 fi
 

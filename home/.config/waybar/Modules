@@ -93,7 +93,8 @@
 	"tooltip-format-connected": "{device_enumerate}",
 	"tooltip-format-enumerate-connected": " {device_alias} 󰂄{device_battery_percentage}%",
 	"tooltip": true,
-	"on-click": "blueman-manager",
+	"on-click": "$HOME/.config/hypr/scripts/BluetoothMenu.sh",
+	"on-click-right": "blueman-manager",
 },
 
 "clock": {
@@ -178,9 +179,10 @@
 },
 
 "hyprland/language": {
-	"format": "Lang: {}",
-	"format-en": "US",
-	"format-tr": "Korea",
+	"format": "{}",
+	"format-us": "EN",
+	"format-gb": "EN",
+	"format-ru": "RU",
 	"keyboard-name": "at-translated-set-2-keyboard",
 	"on-click": "hyprctl switchxkblayout $SET_KB next"
 },
@@ -340,7 +342,8 @@
 	},
 	"scroll-step": 5.0,
 	"on-click": "$HOME/.config/hypr/scripts/Volume.sh --toggle",
-	"on-click-right": "pavucontrol -t 3",
+	"on-click-right": "$HOME/.config/hypr/scripts/AudioOutputMenu.sh",
+	"on-click-middle": "pavucontrol -t 3",
 	"on-scroll-up": "$HOME/.config/hypr/scripts/Volume.sh --inc",
 	"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",
 	"tooltip-format": "{icon} {desc} | {volume}%",

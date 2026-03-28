@@ -8,11 +8,6 @@ if ! command -v hyprctl >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ ! -s "$STATE_FILE" ]]; then
-  echo "No saved session snapshot found: $STATE_FILE"
-  exit 1
-fi
-
 term_cmd="kitty"
 if ! command -v kitty >/dev/null 2>&1; then
   term_cmd="alacritty"
@@ -24,8 +19,8 @@ fi
 command_for_class() {
   local class="$1"
   case "$class" in
-    code-url-handler|Code|code-oss)
-      echo "code"
+    code-url-handler|Code|code-oss|code|com.visualstudio.code)
+      echo "sh -lc '/app/bin/code || code || code-oss || codium'"
       ;;
     google-chrome|Google-chrome|Google-chrome-stable|google-chrome-stable|Chromium|chromium)
       echo "$HOME/.local/bin/google-chrome-stable --restore-last-session"
@@ -34,10 +29,10 @@ command_for_class() {
       echo "firefox"
       ;;
     TelegramDesktop|telegram-desktop|Telegram|org.telegram.desktop)
-      echo "Telegram"
+      echo "sh -lc 'Telegram || telegram-desktop || telegram'"
       ;;
     obsidian|Obsidian)
-      echo "obsidian"
+      echo "sh -lc 'obsidian || flatpak run md.obsidian.Obsidian'"
       ;;
     kitty)
       echo "$term_cmd"
@@ -53,6 +48,11 @@ command_for_class() {
       ;;
   esac
 }
+
+if [[ ! -s "$STATE_FILE" ]]; then
+  notify-send -u low "Hypr session restore" "No saved window snapshot found yet"
+  exit 0
+fi
 
 while IFS=$'\t' read -r ws class count; do
   [[ -z "$ws" || -z "$class" || -z "$count" ]] && continue

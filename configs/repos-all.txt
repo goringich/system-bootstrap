@@ -1,0 +1,13 @@
+# name|repo_url|destination|branch
+Obsidian|git@github.com:goringich/Obsidian.git|$HOME/Desktop/Obsidian|master
+elizabet|git@github.com:goringich/elizabet.git|$HOME/Desktop/elizabet|develop
+llvm-project|git@github.com:goringich/llvm-project.git|$HOME/Desktop/hse/compilers/llvm-project|main
+-|git@github.com:goringich/-.git|$HOME/Desktop/hse|master
+otlichniy-ulov-docs|git@github.com:goringich/otlichniy-ulov-docs.git|$HOME/Desktop/otlichniy-ulov-docs|master
+otlichniy-ulov|git@github.com:goringich/otlichniy-ulov.git|$HOME/Desktop/otlichniy-ulov|master
+codex-orchestrator|git@github.com:goringich/codex-orchestrator.git|$HOME/codex-orchestrator|main
+my-custom-cachyos-iso|git@github.com:goringich/my-custom-cachyos-iso.git|$HOME/custom-cachyos-iso|master
+ESP32-P4-M3|git@github.com:goringich/ESP32-P4-M3.git|$HOME/esp|master
+remote-windows|git@github.com:goringich/remote-windows.git|$HOME/remote-windows|main
+system-bootstrap|git@github.com:goringich/system-bootstrap.git|$HOME/system-bootstrap|main
+telegram-proxy-stack|git@github.com:goringich/telegram-proxy-stack.git|$HOME/telegram-proxy-stack|develop

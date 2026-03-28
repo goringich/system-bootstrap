@@ -4,7 +4,9 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFESTS_DIR="$REPO_ROOT/manifests"
 HOME_SNAPSHOT_DIR="$REPO_ROOT/home"
+SYSTEM_SNAPSHOT_DIR="$REPO_ROOT/system"
 INCLUDE_FILE="$REPO_ROOT/scripts/include-paths.txt"
+SYSTEM_INCLUDE_FILE="$REPO_ROOT/configs/system-paths.txt"
 EXCLUDE_SYSTEM_FILE="$REPO_ROOT/manifests/system-package-exclude.txt"
 SOURCE_HOME="${SOURCE_HOME:-$HOME}"
 
@@ -16,7 +18,7 @@ if [[ "$(id -u)" -eq 0 && -z "${SOURCE_HOME_OVERRIDE:-}" ]]; then
   fi
 fi
 
-mkdir -p "$MANIFESTS_DIR" "$HOME_SNAPSHOT_DIR"
+mkdir -p "$MANIFESTS_DIR" "$HOME_SNAPSHOT_DIR" "$SYSTEM_SNAPSHOT_DIR"
 
 echo "==> Capturing package manifests"
 pacman -Qqen | sort -u > "$MANIFESTS_DIR/pacman-explicit-full.txt"
@@ -50,4 +52,24 @@ while IFS= read -r path; do
   fi
 done < "$INCLUDE_FILE"
 
+if [[ -f "$SYSTEM_INCLUDE_FILE" ]]; then
+  echo "==> Capturing system overlay snapshot"
+  find "$SYSTEM_SNAPSHOT_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    [[ "$path" =~ ^# ]] && continue
+    src="/$path"
+    if [[ -e "$src" ]]; then
+      dst="$SYSTEM_SNAPSHOT_DIR/$path"
+      mkdir -p "$(dirname "$dst")"
+      rsync -a "$src" "$dst"
+    fi
+  done < "$SYSTEM_INCLUDE_FILE"
+fi
+
 echo "==> Capture complete"
+
+if [[ -f "$REPO_ROOT/scripts/export-repo-inventory.sh" ]]; then
+  echo "==> Capturing repository inventory"
+  bash "$REPO_ROOT/scripts/export-repo-inventory.sh"
+fi
