@@ -3,6 +3,14 @@
 
 export ZSH="$HOME/.oh-my-zsh"
 
+# Avoid .zcompdump rename races in non-TTY interactive shells such as `zsh -lic`.
+# Keep the normal shared completion cache for real terminal sessions.
+if [[ -o interactive && ! -t 1 ]]; then
+    export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+    mkdir -p "$XDG_CACHE_HOME/zsh"
+    export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/.zcompdump-${HOST%%.*}-${${ZSH_VERSION}//./_}-$$"
+fi
+
 ZSH_THEME="blinks"
 
 plugins=(
@@ -12,7 +20,11 @@ plugins=(
     zsh-syntax-highlighting
 )
 
-source $ZSH/oh-my-zsh.sh
+if [[ -o interactive && ! -t 1 ]]; then
+    source "$ZSH/oh-my-zsh.sh" 2>/dev/null
+else
+    source "$ZSH/oh-my-zsh.sh"
+fi
 
 
 
@@ -43,12 +55,60 @@ if [[ -o interactive && -t 1 ]]; then
 fi
 
 HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=500000
+SAVEHIST=500000
 setopt appendhistory
-unsetopt inc_append_history share_history extended_history
+setopt inc_append_history
+setopt share_history
+setopt extended_history
+setopt hist_fcntl_lock
+unsetopt hist_ignore_dups
+unsetopt hist_ignore_space
+unsetopt hist_expire_dups_first
+unsetopt hist_verify
+
+export ZSH_HISTORY_BACKUP_DIR="$HOME/__home_organized/artifacts/zsh-history"
+
+backup_zsh_history_snapshot() {
+    [[ -f "$HISTFILE" ]] || return 0
+
+    mkdir -p "$ZSH_HISTORY_BACKUP_DIR" || return 1
+
+    local latest_snapshot="$ZSH_HISTORY_BACKUP_DIR/latest.zsh_history"
+    local daily_snapshot="$ZSH_HISTORY_BACKUP_DIR/$(date +%Y-%m-%d).zsh_history"
+
+    if [[ ! -f "$latest_snapshot" ]] || ! cmp -s "$HISTFILE" "$latest_snapshot"; then
+        command cp "$HISTFILE" "$latest_snapshot"
+        command cp "$HISTFILE" "$daily_snapshot"
+    fi
+}
+
+autoload -Uz add-zsh-hook
+
+sync_zsh_history() {
+    builtin fc -AI "$HISTFILE" 2>/dev/null || true
+    builtin fc -R "$HISTFILE" 2>/dev/null || true
+}
+
+history_prompt_maintenance() {
+    sync_zsh_history
+    backup_zsh_history_snapshot
+}
+
+if [[ -o interactive && -t 1 ]]; then
+    mkdir -p "$HOME/.ssh/controlmasters"
+    chmod 700 "$HOME/.ssh/controlmasters" 2>/dev/null || true
+    sync_zsh_history
+    backup_zsh_history_snapshot
+    add-zsh-hook precmd history_prompt_maintenance
+    add-zsh-hook zshexit backup_zsh_history_snapshot
+fi
 alias telegram-desktop="QT_QPA_PLATFORM=xcb /usr/bin/telegram-desktop"
 export PATH="$HOME/.local/bin:$PATH"
+
+if [[ -f "$HOME/.config/codex/mcp-secrets.env" ]]; then
+    source "$HOME/.config/codex/mcp-secrets.env"
+fi
 
 # === SSH Agent Configuration ===
 ssh_agent_ready() {
@@ -225,6 +285,24 @@ sysinfo-pro() {
     fastfetch -c "$HOME/.config/fastfetch/config-pokemon.jsonc"
 }
 
+# List git repositories by locating every .git entry under the given roots.
+gitrepos() {
+    local roots=("$@")
+    local gitpath
+
+    if (( ${#roots[@]} == 0 )); then
+        roots=(/)
+    fi
+
+    command find "${roots[@]}" \
+        \( -path /proc -o -path /sys -o -path /dev -o -path /run \) -prune -o \
+        -name .git -print 2>/dev/null |
+    while IFS= read -r gitpath; do
+        dirname "$gitpath"
+    done |
+    sort -u
+}
+
 if [[ -o interactive && -t 1 ]]; then
     bindkey '^P' up-history
     bindkey '^N' down-history
@@ -253,3 +331,195 @@ if [[ -o interactive && -t 1 ]]; then
     zle -N fzf-edit-file-widget
     bindkey '^O' fzf-edit-file-widget
 fi
+
+realcode-project() {
+    realcode "${1:-$PWD}"
+}
+
+# >>> codex hacker prompt >>>
+export PATH="$HOME/.local/bin:$PATH"
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+export CLICOLOR=1
+export LSCOLORS="Gxfxcxdxbxegedabagacad"
+export LS_COLORS="di=1;92:ln=1;36:so=1;35:pi=33:ex=1;93:bd=1;94:cd=1;94:su=30;41:sg=30;46:tw=30;42:ow=30;43"
+
+autoload -Uz colors vcs_info
+colors
+setopt prompt_subst
+
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:git:*' formats '%F{39}[git:%b]%f'
+zstyle ':vcs_info:git:*' actionformats '%F{39}[git:%b|%a]%f'
+
+precmd() {
+  vcs_info
+}
+
+typeset -gA CUSTOM_COMMAND_DESCRIPTIONS
+typeset -gA CUSTOM_COMMAND_CATEGORIES
+typeset -gA CUSTOM_COMMAND_USAGES
+
+autoload -Uz run-help 2>/dev/null || true
+
+register_custom_command() {
+  CUSTOM_COMMAND_CATEGORIES[$1]="$2"
+  CUSTOM_COMMAND_DESCRIPTIONS[$1]="$3"
+}
+
+register_custom_usage() {
+  CUSTOM_COMMAND_USAGES[$1]="$2"
+}
+
+register_custom_command ls nav 'lsd with icons'
+register_custom_command l nav 'long ls view'
+register_custom_command la nav 'show hidden files'
+register_custom_command lla nav 'long view with hidden files'
+register_custom_command lt nav 'directory tree view'
+register_custom_command cdi nav 'interactive zoxide jump'
+register_custom_command .. nav 'go up one directory'
+register_custom_command ... nav 'go up two directories'
+register_custom_command .... nav 'go up three directories'
+register_custom_command cd nav 'cd routed through zoxide when target is provided'
+register_custom_command mkcd nav 'create directory and enter it'
+register_custom_command fcd nav 'fzf directory picker'
+register_custom_command fopen nav 'fzf file picker for editor'
+register_custom_command fm nav 'open available file manager'
+register_custom_command v nav 'open editor'
+
+register_custom_command g git 'git shortcut'
+register_custom_command gs git 'git status short branch view'
+register_custom_command ga git 'git add'
+register_custom_command gc git 'git commit'
+register_custom_command gca git 'git commit --amend'
+register_custom_command gp git 'git push'
+register_custom_command gl git 'git pull'
+register_custom_command glg git 'compact git graph log'
+register_custom_command gg git 'open lazygit'
+register_custom_command gu git 'open gitui'
+register_custom_command lg git 'open tig'
+register_custom_command gitrepos git 'list directories that have initialized git repositories'
+register_custom_command realcode git 'count real code lines with product-focused defaults, or only Markdown via --md-only'
+register_custom_command realcode-project git 'run realcode for current directory or provided path'
+
+register_custom_command t system 'open tmux'
+register_custom_command ta system 'attach to tmux session'
+register_custom_command tn system 'create tmux session'
+register_custom_command c system 'clear terminal'
+register_custom_command h system 'show shell history'
+register_custom_command path system 'print PATH line by line'
+register_custom_command mkdir system 'mkdir with parents and verbose output'
+register_custom_command grep system 'ripgrep shortcut'
+register_custom_command dfh system 'human-readable filesystem usage'
+register_custom_command duh system 'directory sizes one level deep'
+register_custom_command psg system 'search running processes'
+register_custom_command ports system 'list listening ports'
+register_custom_command myip system 'show local IP addresses'
+register_custom_command pingg system 'ping google.com'
+register_custom_command extract system 'extract archive by extension'
+register_custom_command fkill system 'fzf process picker and kill -9'
+register_custom_command sysinfo-pro system 'run full fastfetch preset'
+register_custom_command telegram-desktop system 'launch Telegram with XCB backend'
+register_custom_command help meta 'show custom commands help'
+
+register_custom_usage gitrepos $'Usage: gitrepos [search-root ...]\nExamples:\n  gitrepos\n  gitrepos /home/goringich\n  gitrepos ~ /etc /opt\nNotes:\n  Defaults to / when no roots are provided.\n  Skips /proc, /sys, /dev, and /run.\n  Includes nested and cached repos if they contain .git.'
+register_custom_usage realcode $'Usage: realcode [path] [--with-tests] [--with-docs] [--with-config] [--all] [--md-only]\nExamples:\n  realcode\n  realcode .\n  realcode ~/project --with-tests\n  realcode ~/project --md-only\nCounts only non-empty code lines in supported source/config files.\nDefaults to product mode: skips tests, docs, samples, vendored tools, CI and build/config noise.\nUse --md-only to count only Markdown files.\nUse --with-tests, --with-config or --all for broader counts.'
+register_custom_usage realcode-project $'Usage: realcode-project [path]\nShortcut for running realcode on the current directory or a provided path.\nSkips generated/build junk, keeps tests.'
+
+custom_help_category_label() {
+  case "$1" in
+    nav) print 'Navigation & Files' ;;
+    git) print 'Git & Project' ;;
+    system) print 'System & Terminal' ;;
+    meta) print 'Meta' ;;
+    *) print "$1" ;;
+  esac
+}
+
+print_custom_commands_table() {
+  local category="$1"
+  local label="$2"
+  local cmd desc
+  local -a commands
+  local -i max_cmd=7
+  local -i max_desc=11
+  local border header
+
+  for cmd in ${(on)${(k)CUSTOM_COMMAND_DESCRIPTIONS}}; do
+    [[ ${CUSTOM_COMMAND_CATEGORIES[$cmd]} == "$category" ]] || continue
+    commands+=("$cmd")
+    desc=${CUSTOM_COMMAND_DESCRIPTIONS[$cmd]}
+    (( ${#cmd} > max_cmd )) && max_cmd=${#cmd}
+    (( ${#desc} > max_desc )) && max_desc=${#desc}
+  done
+
+  (( ${#commands[@]} )) || return
+
+  border="+-${(r:$max_cmd::--:)}-+-${(r:$max_desc::--:)}-+"
+  header=$(printf '| %-'"$max_cmd"'s | %-'"$max_desc"'s |' 'Command' 'Description')
+
+  print ''
+  print -P "%F{81}${label}%f"
+  print -- "$border"
+  print -- "$header"
+  print -- "$border"
+
+  for cmd in $commands; do
+    desc=${CUSTOM_COMMAND_DESCRIPTIONS[$cmd]}
+    printf '| %-'"$max_cmd"'s | %-'"$max_desc"'s |\n' "$cmd" "$desc"
+  done
+
+  print -- "$border"
+}
+
+print_custom_commands_help() {
+  print ''
+  print -P '%F{117}Custom shell commands%f  Use %F{190}help <command>%f for details.'
+  print_custom_commands_table nav "$(custom_help_category_label nav)"
+  print_custom_commands_table git "$(custom_help_category_label git)"
+  print_custom_commands_table system "$(custom_help_category_label system)"
+  print_custom_commands_table meta "$(custom_help_category_label meta)"
+}
+
+print_custom_command_details() {
+  local cmd="$1"
+  local category desc usage
+
+  if [[ -z ${CUSTOM_COMMAND_DESCRIPTIONS[$cmd]:-} ]]; then
+    return 1
+  fi
+
+  category=$(custom_help_category_label "${CUSTOM_COMMAND_CATEGORIES[$cmd]}")
+  desc=${CUSTOM_COMMAND_DESCRIPTIONS[$cmd]}
+  usage=${CUSTOM_COMMAND_USAGES[$cmd]:-}
+
+  print ''
+  print -P "%F{81}${cmd}%f"
+  print -P "  %F{244}Category:%f ${category}"
+  print -P "  %F{244}Description:%f ${desc}"
+  if [[ -n "$usage" ]]; then
+    print -P "  %F{244}Details:%f"
+    print -- "$usage" | sed 's/^/    /'
+  fi
+}
+
+help() {
+  if [[ $# -eq 0 ]]; then
+    print_custom_commands_help
+    return 0
+  fi
+
+  if print_custom_command_details "$1"; then
+    return 0
+  fi
+
+  if whence run-help >/dev/null 2>&1; then
+    run-help "$@"
+  else
+    whence -v "$1"
+  fi
+}
+
+PROMPT='%F{39}%n%f %F{201}@%m%f %F{46}%~%f ${vcs_info_msg_0_}%(?.%F{82}.%F{196})%#%f '
+# <<< codex hacker prompt <<<
+source "/home/goringich/Desktop/Obsidian/System/zsh/load-custom-commands.zsh"

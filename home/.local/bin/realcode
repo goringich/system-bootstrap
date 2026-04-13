@@ -1,7 +1,69 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="${1:-$PWD}"
+usage() {
+  cat <<'EOF'
+Usage: real_code_lines.sh [path] [options]
+
+Options:
+  --all             Count the full repository view, including tests/docs/config.
+  --with-tests      Include tests and e2e files in product mode.
+  --with-docs       Include docs-like folders in product mode.
+  --with-config     Include scripts, CI, infra and build/config files in product mode.
+  --md-only         Count only Markdown files.
+  -h, --help        Show this help.
+
+Default mode is product-oriented: it excludes tests, samples, docs, vendored tools,
+CI/workflows and repo plumbing so the total is closer to "real app code".
+EOF
+}
+
+ROOT=""
+MODE="product"
+INCLUDE_TESTS=0
+INCLUDE_DOCS=0
+INCLUDE_CONFIG=0
+MD_ONLY=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --all)
+      MODE="all"
+      ;;
+    --with-tests)
+      INCLUDE_TESTS=1
+      ;;
+    --with-docs)
+      INCLUDE_DOCS=1
+      ;;
+    --with-config)
+      INCLUDE_CONFIG=1
+      ;;
+    --md-only)
+      MD_ONLY=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+    *)
+      if [[ -n "$ROOT" ]]; then
+        echo "Only one path argument is supported" >&2
+        usage >&2
+        exit 1
+      fi
+      ROOT="$1"
+      ;;
+  esac
+  shift
+done
+
+ROOT="${ROOT:-$PWD}"
 
 if [[ ! -d "$ROOT" ]]; then
   echo "Directory not found: $ROOT" >&2
@@ -103,12 +165,64 @@ count_sql_style() {
   ' "$1"
 }
 
+count_markup_style() {
+  awk '
+    BEGIN { in_block=0 }
+    {
+      line=$0
+      gsub(/\r/, "", line)
+
+      if (in_block) {
+        if (line ~ /-->/) {
+          sub(/^.*-->/, "", line)
+          in_block=0
+        } else {
+          next
+        }
+      }
+
+      while (line ~ /<!--/) {
+        pre=line
+        sub(/<!--.*$/, "", pre)
+
+        post=line
+        sub(/^.*<!--/, "", post)
+
+        if (post ~ /-->/) {
+          sub(/^.*-->/, "", post)
+          line=pre post
+        } else {
+          line=pre
+          in_block=1
+          break
+        }
+      }
+
+      if (line ~ /^[[:space:]]*$/) next
+      c++
+    }
+    END { print c+0 }
+  ' "$1"
+}
+
+count_markdown_style() {
+  count_markup_style "$1"
+}
+
 should_skip_generated() {
   local f="$1"
   local head
   head=$(sed -n '1,80p' "$f" 2>/dev/null || true)
 
+  if [[ "$f" =~ (^|/)(generated|__generated__|gen)/ ]]; then
+    return 0
+  fi
+
   if [[ "$f" =~ (^|/)backend/migrations/versions/ ]]; then
+    return 0
+  fi
+
+  if [[ "$f" =~ (^|/)(storybook-static|htmlcov|\.next|\.nuxt|\.svelte-kit|\.parcel-cache|\.turbo|\.cache|target|out|release|debug|tmp|temp|vendor|deps|Pods|DerivedData)/ ]]; then
     return 0
   fi
 
@@ -116,7 +230,19 @@ should_skip_generated() {
     return 0
   fi
 
-  if [[ "$f" =~ (^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$ ]]; then
+  if [[ "$f" =~ (^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|Cargo\.lock|poetry\.lock|Pipfile\.lock|composer\.lock)$ ]]; then
+    return 0
+  fi
+
+  if [[ "$f" =~ \.(generated|gen)\.(ts|tsx|js|jsx|py|go|rs|java|kt|sql|css|scss|html)$ ]]; then
+    return 0
+  fi
+
+  if [[ "$f" =~ (^|/).*\.(pb|g)\.(go|ts|js|py|cc|cpp|c|h)$ ]]; then
+    return 0
+  fi
+
+  if [[ "$f" =~ (_pb2\.py|\.designer\.[^.]+)$ ]]; then
     return 0
   fi
 
@@ -127,27 +253,114 @@ should_skip_generated() {
   return 1
 }
 
+is_test_path() {
+  local f="$1"
+
+  [[ "$f" =~ (^|/)(tests?|__tests__|e2e|cypress|playwright)(/|$) ]] && return 0
+  [[ "$f" =~ \.(test|spec)\.(py|ts|tsx|js|jsx)$ ]] && return 0
+
+  return 1
+}
+
+is_docs_path() {
+  local f="$1"
+
+  [[ "$f" =~ (^|/)(docs|doc|updates|samples|examples|fixtures)(/|$) ]] && return 0
+  [[ "$f" =~ (^|/)README(\.[^.]+)?$ ]] && return 0
+
+  return 1
+}
+
+is_config_or_tooling_path() {
+  local f="$1"
+  local base
+  base="$(basename "$f")"
+
+  [[ "$f" =~ (^|/)(\.github|\.vscode|\.idea|infra|scripts|ops|deploy|helm)(/|$) ]] && return 0
+  [[ "$f" =~ (^|/)\.[^/]+/ ]] && return 0
+  [[ "$f" =~ (^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$ ]] && return 0
+  [[ "$base" =~ ^(Dockerfile|Makefile|Jenkinsfile)$ ]] && return 0
+  [[ "$base" =~ ^(vite|vitest|playwright|jest|eslint|prettier|babel|webpack|rollup|tsup|postcss|tailwind|commitlint)\.config\.(js|cjs|mjs|ts)$ ]] && return 0
+  [[ "$base" =~ ^docker-compose(\.[^.]+)?\.ya?ml$ ]] && return 0
+  [[ "$base" =~ ^tsconfig(\.[^.]+)?\.json$ ]] && return 0
+
+  return 1
+}
+
+should_skip_by_mode() {
+  local f="$1"
+
+  if (( MD_ONLY )); then
+    return 1
+  fi
+
+  if [[ "$MODE" == "all" ]]; then
+    return 1
+  fi
+
+  if (( ! INCLUDE_TESTS )) && is_test_path "$f"; then
+    return 0
+  fi
+
+  if (( ! INCLUDE_DOCS )) && is_docs_path "$f"; then
+    return 0
+  fi
+
+  if (( ! INCLUDE_CONFIG )) && is_config_or_tooling_path "$f"; then
+    return 0
+  fi
+
+  return 1
+}
+
+find_files() {
+  if (( MD_ONLY )); then
+    find "$ROOT" -type f \
+      ! -path '*/.git/*' \
+      ! -path '*/node_modules/*' \
+      ! -path '*/dist/*' \
+      ! -path '*/build/*' \
+      ! -path '*/.venv*/*' \
+      ! -path '*/.venv/*' \
+      ! -path '*/venv/*' \
+      ! -path '*/site-packages/*' \
+      ! -path '*/__pycache__/*' \
+      ! -path '*/.pytest_cache/*' \
+      ! -path '*/.mypy_cache/*' \
+      ! -path '*/.ruff_cache/*' \
+      ! -path '*/.gradle/*' \
+      ! -path '*/coverage/*' \
+      ! -path '*/backend/exports/*' \
+      ! -path '*/.tools/*' \
+      -name '*.md' \
+      -print0
+  else
+    find "$ROOT" -type f \
+      ! -path '*/.git/*' \
+      ! -path '*/node_modules/*' \
+      ! -path '*/dist/*' \
+      ! -path '*/build/*' \
+      ! -path '*/.venv*/*' \
+      ! -path '*/.venv/*' \
+      ! -path '*/venv/*' \
+      ! -path '*/site-packages/*' \
+      ! -path '*/__pycache__/*' \
+      ! -path '*/.pytest_cache/*' \
+      ! -path '*/.mypy_cache/*' \
+      ! -path '*/.ruff_cache/*' \
+      ! -path '*/.gradle/*' \
+      ! -path '*/coverage/*' \
+      ! -path '*/backend/exports/*' \
+      ! -path '*/.tools/*' \
+      \( -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.cjs' -o -name '*.mjs' -o -name '*.cts' -o -name '*.mts' -o -name '*.sql' -o -name '*.sh' -o -name '*.zsh' -o -name '*.bash' -o -name '*.yml' -o -name '*.yaml' -o -name '*.toml' -o -name '*.c' -o -name '*.h' -o -name '*.cc' -o -name '*.hh' -o -name '*.cpp' -o -name '*.hpp' -o -name '*.cxx' -o -name '*.hxx' -o -name '*.go' -o -name '*.rs' -o -name '*.java' -o -name '*.kt' -o -name '*.kts' -o -name '*.css' -o -name '*.scss' -o -name '*.html' -o -name '*.xml' -o -name '*.proto' -o -name 'Dockerfile' -o -name 'Makefile' \) \
+      -print0
+  fi
+}
+
 files=()
 while IFS= read -r -d '' file; do
   files+=("$file")
-done < <(
-  find "$ROOT" -type f \
-    ! -path '*/.git/*' \
-    ! -path '*/node_modules/*' \
-    ! -path '*/dist/*' \
-    ! -path '*/build/*' \
-    ! -path '*/.venv*/*' \
-    ! -path '*/.venv/*' \
-    ! -path '*/venv/*' \
-    ! -path '*/site-packages/*' \
-    ! -path '*/__pycache__/*' \
-    ! -path '*/.pytest_cache/*' \
-    ! -path '*/.mypy_cache/*' \
-    ! -path '*/coverage/*' \
-    ! -path '*/backend/exports/*' \
-    \( -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.sql' -o -name '*.sh' -o -name '*.zsh' -o -name '*.yml' -o -name '*.yaml' -o -name 'Dockerfile' -o -name 'Makefile' \) \
-    -print0
-)
+done < <(find_files)
 
 if [[ ${#files[@]} -eq 0 ]]; then
   echo "No code files found"
@@ -163,18 +376,28 @@ for file in "${files[@]}"; do
     continue
   fi
 
+  if should_skip_by_mode "$file"; then
+    continue
+  fi
+
   rel="${file#"$ROOT"/}"
   ext="${file##*.}"
 
   case "$ext" in
-    py|sh|zsh|yml|yaml)
+    md)
+      loc=$(count_markdown_style "$file")
+      ;;
+    py|sh|zsh|bash|yml|yaml|toml)
       loc=$(count_hash_style "$file")
       ;;
     sql)
       loc=$(count_sql_style "$file")
       ;;
-    ts|tsx|js|jsx)
+    ts|tsx|js|jsx|cjs|mjs|cts|mts|c|h|cc|hh|cpp|hpp|cxx|hxx|go|rs|java|kt|kts|css|scss|proto)
       loc=$(count_slash_style "$file")
+      ;;
+    html|xml)
+      loc=$(count_markup_style "$file")
       ;;
     *)
       if [[ "$(basename "$file")" == "Dockerfile" || "$(basename "$file")" == "Makefile" ]]; then
