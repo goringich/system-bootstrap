@@ -1,0 +1,22 @@
+[Desktop Entry]
+Name=Hiddify
+GenericName=Proxy Client
+Comment=Multi-platform proxy client based on Hiddify
+Exec=/home/goringich/.local/bin/hiddify %u
+Terminal=false
+Type=Application
+Icon=/home/goringich/__home_organized/artifacts/hiddify/current/hiddify.png
+StartupWMClass=app.hiddify.com
+StartupNotify=true
+Categories=Network;
+Keywords=Hiddify;Proxy;VPN;V2Ray;Xray;Sing-box;
+MimeType=x-scheme-handler/hiddify;x-scheme-handler/v2ray;x-scheme-handler/v2rayn;x-scheme-handler/v2rayng;x-scheme-handler/clash;x-scheme-handler/clashmeta;x-scheme-handler/sing-box;
+Actions=start;stop
+
+[Desktop Action start]
+Name=Start
+Exec=/home/goringich/.local/bin/hiddify --start %u
+
+[Desktop Action stop]
+Name=Stop
+Exec=/home/goringich/.local/bin/hiddify --stop %u

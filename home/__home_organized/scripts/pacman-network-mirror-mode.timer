@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodically refresh pacman mirror mode
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+Unit=pacman-network-mirror-mode.service
+
+[Install]
+WantedBy=timers.target

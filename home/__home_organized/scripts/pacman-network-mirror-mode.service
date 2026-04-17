@@ -1,0 +1,8 @@
+[Unit]
+Description=Refresh pacman and CachyOS mirrors based on VPN state
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/pacman-network-mirror-mode.sh
