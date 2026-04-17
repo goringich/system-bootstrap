@@ -38,16 +38,29 @@ Server = https://at.cachyos.org/repo/$arch/$repo
 Server = https://us.cachyos.org/repo/$arch/$repo
 '
 
+full_tunnel_route_active() {
+    ip route show table all 2>/dev/null \
+        | awk '$1 == "default" { for (i = 1; i <= NF; i++) if ($i == "dev") print $(i + 1) }' \
+        | grep -Eiq '^(tun[[:alnum:]_.:-]*|wg[[:alnum:]_.:-]*|tailscale[[:alnum:]_.:-]*|warp[[:alnum:]_.:-]*|ppp[[:alnum:]_.:-]*|tap[[:alnum:]_.:-]*|cachyOs)$'
+}
+
+vpn_service_active() {
+    systemctl list-units --type=service --state=active --no-legend --no-pager 2>/dev/null \
+        | awk '{print $1}' \
+        | grep -Eiq '^(openvpn|openvpn-client@|wg-quick@|wireguard|warp-svc|sing-box|xray|v2ray|clash|mihomo|hiddify|nekoray|tun2socks)'
+}
+
+proxy_listener_active() {
+    ss -H -ltnup 2>/dev/null \
+        | grep -Eiq 'users:\(\("(hiddify|HiddifyCli|sing-box|xray|v2ray|clash|mihomo|nekoray|tun2socks|warp-svc)'
+}
+
+vpn_process_active() {
+    pgrep -x 'HiddifyCli|hiddify|sing-box|xray|v2ray|clash|mihomo|nekoray|tun2socks|warp-svc|openvpn|wireguard-go' >/dev/null 2>&1
+}
+
 vpn_active() {
-    if ip route show default 2>/dev/null | grep -Eiq 'tun|wg|tailscale|warp|ppp|tap|cachyOs'; then
-        return 0
-    fi
-
-    if pgrep -af 'hiddify|HiddifyCli|sing-box|xray|clash|mihomo|warp-svc|openvpn|wireguard-go' >/dev/null 2>&1; then
-        return 0
-    fi
-
-    return 1
+    full_tunnel_route_active || vpn_service_active || proxy_listener_active || vpn_process_active
 }
 
 selected_mode() {
