@@ -8,6 +8,7 @@ SYSTEM_SNAPSHOT_DIR="$REPO_ROOT/system"
 INCLUDE_FILE="$REPO_ROOT/scripts/include-paths.txt"
 SYSTEM_INCLUDE_FILE="$REPO_ROOT/configs/system-paths.txt"
 EXCLUDE_SYSTEM_FILE="$REPO_ROOT/manifests/system-package-exclude.txt"
+RSYNC_EXCLUDES_FILE="$REPO_ROOT/configs/rsync-excludes.txt"
 SOURCE_HOME="${SOURCE_HOME:-$HOME}"
 
 if [[ "$(id -u)" -eq 0 && -z "${SOURCE_HOME_OVERRIDE:-}" ]]; then
@@ -19,6 +20,11 @@ if [[ "$(id -u)" -eq 0 && -z "${SOURCE_HOME_OVERRIDE:-}" ]]; then
 fi
 
 mkdir -p "$MANIFESTS_DIR" "$HOME_SNAPSHOT_DIR" "$SYSTEM_SNAPSHOT_DIR"
+
+rsync_args=(-a --no-owner --no-group)
+if [[ -f "$RSYNC_EXCLUDES_FILE" ]]; then
+  rsync_args+=(--exclude-from="$RSYNC_EXCLUDES_FILE")
+fi
 
 echo "==> Capturing package manifests"
 pacman -Qqen | sort -u > "$MANIFESTS_DIR/pacman-explicit-full.txt"
@@ -44,10 +50,10 @@ while IFS= read -r path; do
     dst="$HOME_SNAPSHOT_DIR/$path"
     if [[ -d "$src" ]]; then
       mkdir -p "$dst"
-      rsync -a "$src/" "$dst/"
+      rsync "${rsync_args[@]}" "$src/" "$dst/"
     else
       mkdir -p "$HOME_SNAPSHOT_DIR/$(dirname "$path")"
-      rsync -a "$src" "$dst"
+      rsync "${rsync_args[@]}" "$src" "$dst"
     fi
   fi
 done < "$INCLUDE_FILE"
@@ -62,7 +68,7 @@ if [[ -f "$SYSTEM_INCLUDE_FILE" ]]; then
     if [[ -e "$src" ]]; then
       dst="$SYSTEM_SNAPSHOT_DIR/$path"
       mkdir -p "$(dirname "$dst")"
-      rsync -a "$src" "$dst"
+      rsync "${rsync_args[@]}" "$src" "$dst"
     fi
   done < "$SYSTEM_INCLUDE_FILE"
 fi

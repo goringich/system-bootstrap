@@ -1,0 +1,8 @@
+# Snapshot copies inside system-bootstrap are payload, not independent repositories.
+$HOME/system-bootstrap/home
+
+# Downloads are not canonical project locations even when they contain git repos.
+$HOME/Downloads
+
+# Model/vendor checkouts are artifact caches, not personal source-of-truth repos.
+$HOME/models

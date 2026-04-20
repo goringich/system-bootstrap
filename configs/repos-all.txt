@@ -1,13 +1,17 @@
 # name|repo_url|destination|branch
+3d-graph-improvements-|git@github.com:goringich/3d-graph-improvements-.git|$HOME/Desktop/Obsidian/garbage/obsidian-3d-graph-controls|feature/rebase-on-sample-plugin
 Obsidian|git@github.com:goringich/Obsidian.git|$HOME/Desktop/Obsidian|master
-elizabet|git@github.com:goringich/elizabet.git|$HOME/Desktop/elizabet|develop
 llvm-project|git@github.com:goringich/llvm-project.git|$HOME/Desktop/hse/compilers/llvm-project|main
 -|git@github.com:goringich/-.git|$HOME/Desktop/hse|master
+mainor-hometask|git@github.com:goringich/mainor-hometask.git|$HOME/Desktop/mainor-hometask|master
 otlichniy-ulov-docs|git@github.com:goringich/otlichniy-ulov-docs.git|$HOME/Desktop/otlichniy-ulov-docs|master
 otlichniy-ulov|git@github.com:goringich/otlichniy-ulov.git|$HOME/Desktop/otlichniy-ulov|master
+elizabet|git@github.com:goringich/elizabet.git|$HOME/Desktop/server/elizabet|develop
+remote-windows|git@github.com:goringich/remote-windows.git|$HOME/Desktop/server/remote-windows|main
+telegram-proxy-stack|git@github.com:goringich/telegram-proxy-stack.git|$HOME/Desktop/server/telegram-proxy-stack|develop
+jJarvis-Translator-into-Obsidian|git@github.com:goringich/jJarvis-Translator-into-Obsidian.git|$HOME/__home_organized/scripts/obsidian-voice-vocab|main
 codex-orchestrator|git@github.com:goringich/codex-orchestrator.git|$HOME/codex-orchestrator|main
 my-custom-cachyos-iso|git@github.com:goringich/my-custom-cachyos-iso.git|$HOME/custom-cachyos-iso|master
 ESP32-P4-M3|git@github.com:goringich/ESP32-P4-M3.git|$HOME/esp|master
-remote-windows|git@github.com:goringich/remote-windows.git|$HOME/remote-windows|main
+obsidian-repo-mounts|git@github.com:goringich/obsidian-repo-mounts.git|$HOME/obsidian-repo-mounts|main
 system-bootstrap|git@github.com:goringich/system-bootstrap.git|$HOME/system-bootstrap|main
-telegram-proxy-stack|git@github.com:goringich/telegram-proxy-stack.git|$HOME/telegram-proxy-stack|develop

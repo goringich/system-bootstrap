@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCAN_ROOT="${SCAN_ROOT:-$HOME}"
 DOC_OUT="${DOC_OUT:-$REPO_ROOT/docs/repo-inventory.md}"
 MANIFEST_OUT="${MANIFEST_OUT:-$REPO_ROOT/configs/repos-all.txt}"
+EXCLUDES_FILE="${REPO_INVENTORY_EXCLUDES_FILE:-$REPO_ROOT/configs/repo-inventory-excludes.txt}"
 
 classify_repo() {
   local path="$1"
@@ -53,8 +54,25 @@ infer_branch() {
 tmp_inventory="$(mktemp)"
 trap 'rm -f "$tmp_inventory"' EXIT
 
+is_excluded_repo_path() {
+  local path="$1"
+  local pattern
+
+  [[ -f "$EXCLUDES_FILE" ]] || return 1
+  while IFS= read -r pattern; do
+    [[ -n "$pattern" ]] || continue
+    [[ "$pattern" =~ ^# ]] && continue
+    pattern="${pattern/#\$HOME/$HOME}"
+    pattern="${pattern/#~/$HOME}"
+    [[ "$path" == "$pattern" || "$path" == "$pattern"/* ]] && return 0
+  done < "$EXCLUDES_FILE"
+
+  return 1
+}
+
 while IFS= read -r gitdir; do
   path="$(dirname "$gitdir")"
+  is_excluded_repo_path "$path" && continue
   remote="$(git -C "$path" remote get-url origin 2>/dev/null || true)"
   branch="$(git -C "$path" branch --show-current 2>/dev/null || true)"
   dirty="$(git -C "$path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
@@ -62,7 +80,7 @@ while IFS= read -r gitdir; do
   printf '%s|%s|%s|%s|%s\n' "$path" "$remote" "$branch" "$dirty" "$category" >> "$tmp_inventory"
 done < <(
   find "$SCAN_ROOT" \
-    \( -path "$SCAN_ROOT/.cache" -o -path "$SCAN_ROOT/.cargo" -o -path "$SCAN_ROOT/.codex" -o -path "$SCAN_ROOT/.local/share/Trash" -o -path "$SCAN_ROOT/.var" \) -prune -o \
+    \( -path "$SCAN_ROOT/.cache" -o -path "$SCAN_ROOT/.cargo" -o -path "$SCAN_ROOT/.codex" -o -path "$SCAN_ROOT/.local/share/Trash" -o -path "$SCAN_ROOT/.pub-cache" -o -path "$SCAN_ROOT/.var" -o -path "$SCAN_ROOT/fvm" \) -prune -o \
     -name .git -type d -print 2>/dev/null | sort
 )
 

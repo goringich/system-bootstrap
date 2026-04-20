@@ -90,6 +90,11 @@ Runtime и логи лежат вне home root:
 - `docs/repo-inventory.md`
 - `configs/repos-all.txt`
 
+Snapshot hygiene:
+- `configs/rsync-excludes.txt` blocks secrets, shell history, browser/runtime state, caches and generated wallpaper artifacts from entering `home/`.
+- `scripts/validate-repo.sh` is the local/CI gate for shell syntax, manifest format, obvious secret patterns and the dry-run restore entrypoint.
+- `.github/workflows/ci.yml` runs the same validation on GitHub Actions.
+
 ## Опции установки
 
 ```bash

@@ -2,3 +2,29 @@
 *.tmp
 *.bak
 .DS_Store
+
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local/editor state
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secret-bearing local state must never become restore payload.
+home/.config/codex/mcp-secrets.env
+home/.config/codex/**/*.env
+home/.ssh/
+home/.gnupg/
+home/.zsh_history
+home/__home_organized/artifacts/zsh-history/
+
+# Generated wallpaper/current-session artifacts are runtime state.
+home/.config/hypr/wallpaper_effects/.wallpaper_current
+home/.config/hypr/wallpaper_effects/.wallpaper_modified
+
+# Generated reports are recreated by the control scripts.
+__home_organized/logs/
