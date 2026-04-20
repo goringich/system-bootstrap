@@ -1,0 +1,5 @@
+# name|path|visibility|decision|reason
+otlichny-ulov-game-ui|$HOME/Desktop/otlichny-ulov-game-ui|private|publish|Clean standalone fishing game UI prototype.
+hyprland-nvidia-recovery-docs|$HOME/hyprland-nvidia-recovery-docs|private|publish|Clean recovery/runbook documentation repo.
+dotfiles|$HOME/dotfiles|private|retire-or-merge|Overlaps system-bootstrap; keep local until scope is deduplicated.
+openclaw-workspace|$HOME/.openclaw/workspace|private|review-before-publish|Dirty runtime/memory workspace; likely contains private operational state.

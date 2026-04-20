@@ -95,6 +95,37 @@ Snapshot hygiene:
 - `scripts/validate-repo.sh` is the local/CI gate for shell syntax, manifest format, obvious secret patterns and the dry-run restore entrypoint.
 - `.github/workflows/ci.yml` runs the same validation on GitHub Actions.
 
+## Publishing Local-Only Repos
+
+Local-only repositories are tracked in:
+
+```bash
+configs/local-only-repos.txt
+```
+
+After `gh auth login` is healthy, publish safe candidates with:
+
+```bash
+./scripts/publish-local-only-repos.sh --dry-run
+./scripts/publish-local-only-repos.sh
+```
+
+The publisher only acts on `decision=publish`, refuses dirty repos, scans tracked files for obvious secret material, creates private GitHub repos by default, and pushes with `GIT_SSH_COMMAND='ssh -F /dev/null'` to bypass broken machine-level SSH config while `/etc` ownership is being repaired.
+
+## System Ownership Doctor
+
+If SSH or sudo reports bad owner/permissions for `/etc`, inspect with:
+
+```bash
+./scripts/doctor-system-ownership.sh
+```
+
+Repair requires a real root shell or recovery context:
+
+```bash
+./scripts/doctor-system-ownership.sh --fix
+```
+
 ## Опции установки
 
 ```bash
