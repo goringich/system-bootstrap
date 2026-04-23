@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL_LOCAL="ollama/mdq100/qwen3.5-coder:35b"
+MODEL_FAST="ollama/gpt-oss:20b"
+MODEL_QUALITY="ollama/qwen3-coder-next:q8_0"
+SYNC_SCRIPT="/home/goringich/__home_organized/scripts/openclaw_ollama_sync.py"
+
+TG_KEYS=(
+  "agent:main:telegram:custom-1:direct:<telegram-user-id>"
+  "agent:main:telegram:slash:<telegram-user-id>"
+)
+
+usage() {
+  cat <<'EOF'
+Usage:
+  openclaw-local-model status
+  openclaw-local-model local
+  openclaw-local-model fast
+  openclaw-local-model quality
+  openclaw-local-model sync
+  openclaw-local-model ollama
+  openclaw-local-model use <ollama-model>
+  openclaw-local-model reset-tg
+
+Profiles:
+  local    mdq100/qwen3.5-coder:35b primary, fast -> quality fallbacks
+  fast     gpt-oss:20b primary, local -> quality fallbacks
+  quality  qwen3-coder-next:q8_0 primary, local -> fast fallbacks
+
+Dynamic Ollama:
+  sync     refresh OpenClaw model catalogs from installed Ollama chat models
+  ollama   list installed Ollama chat models as OpenClaw model IDs
+  use      set any installed Ollama chat model as primary
+
+This command always keeps fallback local-only and resets the active Telegram
+direct sessions so the switch takes effect immediately.
+EOF
+}
+
+sync_ollama_models() {
+  "${SYNC_SCRIPT}"
+}
+
+list_ollama_models() {
+  sync_ollama_models >/dev/null
+  openclaw models list | awk '$1 ~ /^ollama\// { print $1 }'
+}
+
+normalize_model() {
+  local model="$1"
+  if [[ "${model}" == ollama/* ]]; then
+    printf '%s\n' "${model}"
+  else
+    printf 'ollama/%s\n' "${model}"
+  fi
+}
+
+reset_tg_sessions() {
+  local key
+  for key in "${TG_KEYS[@]}"; do
+    openclaw gateway call sessions.reset \
+      --params "{\"key\":\"${key}\"}" \
+      --json \
+      --timeout 60000 >/dev/null
+  done
+}
+
+set_profile() {
+  local primary="$1"
+  shift
+  local fallbacks=("$@")
+
+  openclaw models set "${primary}" >/dev/null
+  openclaw models fallbacks clear >/dev/null
+
+  local fb
+  for fb in "${fallbacks[@]}"; do
+    openclaw models fallbacks add "${fb}" >/dev/null
+  done
+
+  openclaw gateway restart >/dev/null
+  reset_tg_sessions
+
+  printf 'primary=%s\n' "${primary}"
+  printf 'fallbacks=%s\n' "$(printf '%s, ' "${fallbacks[@]}" | sed 's/, $//')"
+  openclaw status --deep --timeout 5000
+}
+
+cmd="${1:-status}"
+
+case "${cmd}" in
+  status)
+    openclaw models status --plain
+    printf '\n'
+    openclaw models fallbacks list
+    ;;
+  local)
+    set_profile "${MODEL_LOCAL}" "${MODEL_FAST}" "${MODEL_QUALITY}"
+    ;;
+  fast)
+    set_profile "${MODEL_FAST}" "${MODEL_LOCAL}" "${MODEL_QUALITY}"
+    ;;
+  quality)
+    set_profile "${MODEL_QUALITY}" "${MODEL_LOCAL}" "${MODEL_FAST}"
+    ;;
+  sync)
+    sync_ollama_models
+    openclaw gateway restart >/dev/null
+    openclaw models list
+    ;;
+  ollama)
+    list_ollama_models
+    ;;
+  use)
+    if [[ -z "${2:-}" ]]; then
+      usage >&2
+      exit 1
+    fi
+    sync_ollama_models >/dev/null
+    set_profile "$(normalize_model "${2}")" "${MODEL_FAST}" "${MODEL_LOCAL}"
+    ;;
+  reset-tg)
+    reset_tg_sessions
+    openclaw status --deep --timeout 5000
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac

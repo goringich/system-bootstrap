@@ -1,0 +1,8 @@
+NAME                        ID              SIZE      MODIFIED    
+qwen3.6:35b-a3b             07d35212591f    23 GB     5 days ago     
+qwen2.5:1.5b                65ec06548149    986 MB    7 days ago     
+minimax-m2.7:ud-iq3_s       ea51709ca853    83 GB     9 days ago     
+nomic-embed-text:latest     0a109f422b47    274 MB    10 days ago    
+qwen3-coder-next:q8_0       3f68e12b44ee    84 GB     2 weeks ago    
+mdq100/qwen3.5-coder:35b    c205cb1f2a62    23 GB     2 weeks ago    
+gpt-oss:20b                 17052f91a42e    13 GB     7 weeks ago    

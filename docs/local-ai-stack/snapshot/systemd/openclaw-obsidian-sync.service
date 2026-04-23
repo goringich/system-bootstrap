@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync OpenClaw conversations to Obsidian markdown
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/.local/bin/openclaw-obsidian-sync

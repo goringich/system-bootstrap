@@ -1,0 +1,6 @@
+[Unit]
+Description=Sample Ollama hardware usage and mirror it to Obsidian
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/__home_organized/scripts/ollama_hw_obsidian_logger.py

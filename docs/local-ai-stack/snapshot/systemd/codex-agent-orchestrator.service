@@ -1,0 +1,6 @@
+[Unit]
+Description=Run one queued Codex orchestrator task
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/codex-agent-run

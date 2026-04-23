@@ -1,0 +1,11 @@
+[Unit]
+Description=Run OpenClaw to Obsidian sync periodically
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=2min
+Persistent=true
+Unit=openclaw-obsidian-sync.service
+
+[Install]
+WantedBy=timers.target

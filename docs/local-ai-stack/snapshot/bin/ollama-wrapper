@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REAL_OLLAMA="/usr/local/bin/ollama"
+SYNC_SCRIPT="/home/goringich/__home_organized/scripts/openclaw_ollama_sync.py"
+
+set +e
+"${REAL_OLLAMA}" "$@"
+status=$?
+set -e
+
+case "${1:-}" in
+  pull|create|rm|cp|push)
+    if [[ "${status}" -eq 0 && -x "${SYNC_SCRIPT}" ]]; then
+      "${SYNC_SCRIPT}" >/dev/null || true
+      if command -v openclaw >/dev/null 2>&1; then
+        openclaw gateway restart >/dev/null 2>&1 || true
+      fi
+    fi
+    ;;
+esac
+
+exit "${status}"

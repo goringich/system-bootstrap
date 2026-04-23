@@ -1,0 +1,11 @@
+[Unit]
+Description=Poll Codex orchestrator queue
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=10m
+Persistent=true
+Unit=codex-agent-orchestrator.service
+
+[Install]
+WantedBy=timers.target
