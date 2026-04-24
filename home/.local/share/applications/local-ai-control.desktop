@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Local AI Control
+Comment=Refresh and show the local Ollama/OpenClaw/Obsidian AI dashboard
+Exec=kitty --title "Local AI Control" /home/goringich/.local/bin/local-ai-control-terminal
+Icon=utilities-system-monitor
+Terminal=false
+Categories=Utility;X-AI;

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+/home/goringich/.local/bin/local-ai-control dashboard
+printf '\n'
+/home/goringich/.local/bin/local-ai-control status
+printf '\nPress Enter to close...'
+read -r _

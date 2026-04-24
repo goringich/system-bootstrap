@@ -9,6 +9,8 @@
 - OpenHarness: separate local harness on top of Ollama.
 - Obsidian: long-term memory, architecture notes, conversation mirrors, system
   health logs.
+- Local AI Control: local command and Rofi launcher that summarizes
+  Ollama/OpenClaw/GPU state and writes the Obsidian AI dashboard.
 
 ## Local Model Inventory
 
@@ -61,8 +63,36 @@ The timer refreshes catalogs without forcing a gateway restart every interval.
 - `~/__home_organized/scripts/openclaw_ollama_sync.py`
 - `~/__home_organized/scripts/ollama_hw_obsidian_logger.py`
 - `~/__home_organized/scripts/waybar-ai-usage.py`
+- `~/__home_organized/scripts/local-ai-control.py`
+- `~/.local/bin/local-ai-control`
+- `~/.local/share/applications/local-ai-control.desktop`
+- `~/Desktop/Obsidian/ИИ/Local AI Control Center.md`
 - `~/Desktop/Obsidian/ИИ/`
 - `~/codex-orchestrator`
+
+## Local AI Control
+
+The control surface is intentionally lightweight and does not install a new
+model runner or web application. It keeps the current architecture centered on
+Ollama, OpenClaw, OpenHarness, and Obsidian.
+
+Commands:
+
+```bash
+local-ai-control status
+local-ai-control dashboard
+local-ai-control json
+```
+
+The dashboard records:
+
+- installed Ollama models
+- selected local model roles: heavy coding, balanced coding, fast draft, RAG
+  embeddings
+- GPU and active-model state
+- OpenClaw status summary
+- candidate next-layer tools researched for the stack: Open WebUI, AnythingLLM,
+  Qdrant, and R2R
 
 ## GitHub Placement
 

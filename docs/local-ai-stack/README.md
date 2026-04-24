@@ -24,6 +24,11 @@ conversation logs, runtime state, or secrets.
 - `snapshot/scripts/ollama_hw_obsidian_logger.py` - Ollama hardware sampling
   logger.
 - `snapshot/scripts/waybar-ai-usage.py` - Waybar AI usage indicator.
+- `home/__home_organized/scripts/local-ai-control.py` - local AI control
+  surface that inventories Ollama/OpenClaw/GPU state and writes an Obsidian
+  dashboard.
+- `home/.local/share/applications/local-ai-control.desktop` - Rofi/Super+D
+  launcher entry for the control surface.
 - `snapshot/systemd/` - relevant user service/timer units.
 - `notes/` - curated architecture notes from Obsidian.
 
