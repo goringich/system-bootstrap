@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+compose_dir="/home/goringich/__home_organized/runtime/local-ai/open-webui"
+url="http://127.0.0.1:3030"
+
+usage() {
+  cat <<'USAGE'
+Usage: open-webui {start|stop|restart|status|logs|open|url|pull}
+USAGE
+}
+
+cmd="${1:-status}"
+
+case "$cmd" in
+  start)
+    docker compose -f "$compose_dir/compose.yaml" up -d
+    printf 'Open WebUI: %s\n' "$url"
+    ;;
+  stop)
+    docker compose -f "$compose_dir/compose.yaml" down
+    ;;
+  restart)
+    docker compose -f "$compose_dir/compose.yaml" up -d
+    printf 'Open WebUI: %s\n' "$url"
+    ;;
+  status)
+    docker compose -f "$compose_dir/compose.yaml" ps
+    printf '\n%s\n' "$url"
+    ;;
+  logs)
+    docker compose -f "$compose_dir/compose.yaml" logs -f --tail=160
+    ;;
+  open)
+    docker compose -f "$compose_dir/compose.yaml" up -d >/dev/null
+    for _ in {1..30}; do
+      if curl -fsS "$url" >/dev/null 2>&1; then
+        break
+      fi
+      sleep 1
+    done
+    xdg-open "$url"
+    ;;
+  url)
+    printf '%s\n' "$url"
+    ;;
+  pull)
+    docker compose -f "$compose_dir/compose.yaml" pull
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

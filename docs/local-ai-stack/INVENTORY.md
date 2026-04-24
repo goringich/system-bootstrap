@@ -7,6 +7,8 @@
 - OpenClaw: persistent local gateway, Telegram routing, project agents.
 - Ollama: local inference backend and model registry.
 - OpenHarness: separate local harness on top of Ollama.
+- Open WebUI: browser UI on `http://127.0.0.1:3030` for local Ollama chat,
+  file/document chat, RAG, and future tool/function workflows.
 - Obsidian: long-term memory, architecture notes, conversation mirrors, system
   health logs.
 - Local AI Control: local command and Rofi launcher that summarizes
@@ -67,8 +69,49 @@ The timer refreshes catalogs without forcing a gateway restart every interval.
 - `~/.local/bin/local-ai-control`
 - `~/.local/share/applications/local-ai-control.desktop`
 - `~/Desktop/Obsidian/ИИ/Local AI Control Center.md`
+- `~/__home_organized/runtime/local-ai/open-webui/compose.yaml`
+- `~/__home_organized/scripts/local-ai/open-webui`
+- `~/.local/bin/open-webui-local`
+- `~/.local/share/applications/open-webui-local.desktop`
+- `~/Desktop/Obsidian/ИИ/Open WebUI Local.md`
 - `~/Desktop/Obsidian/ИИ/`
 - `~/codex-orchestrator`
+
+## Open WebUI
+
+Open WebUI is installed as the practical browser layer on top of the existing
+Ollama service. It is intentionally local-only by default.
+
+Runtime:
+
+- URL: `http://127.0.0.1:3030`
+- container: `local-ai-open-webui`
+- image: `ghcr.io/open-webui/open-webui:main`
+- compose: `~/__home_organized/runtime/local-ai/open-webui/compose.yaml`
+- data volume: `local-ai-open-webui-data`
+- Docker restart policy: `unless-stopped`
+
+Model wiring:
+
+- Ollama base URL: `http://127.0.0.1:11434`
+- default model: `mdq100/qwen3.5-coder:35b`
+- task/fast model: `gpt-oss:20b`
+- RAG embedding engine: `ollama`
+- RAG embedding model: `nomic-embed-text:latest`
+- hybrid RAG search: enabled
+- web search: disabled by default
+
+Commands:
+
+```bash
+open-webui-local start
+open-webui-local status
+open-webui-local logs
+open-webui-local stop
+open-webui-local open
+```
+
+The Rofi/Super+D launcher is `Open WebUI Local`.
 
 ## Local AI Control
 

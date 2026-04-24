@@ -29,6 +29,13 @@ conversation logs, runtime state, or secrets.
   dashboard.
 - `home/.local/share/applications/local-ai-control.desktop` - Rofi/Super+D
   launcher entry for the control surface.
+- `home/__home_organized/runtime/local-ai/open-webui/compose.yaml` - Open WebUI
+  Docker Compose deployment bound to local Ollama.
+- `home/__home_organized/scripts/local-ai/open-webui` and
+  `home/.local/bin/open-webui-local` - Open WebUI start/stop/status/open
+  commands.
+- `home/.local/share/applications/open-webui-local.desktop` - Rofi/Super+D
+  launcher for the browser UI.
 - `snapshot/systemd/` - relevant user service/timer units.
 - `notes/` - curated architecture notes from Obsidian.
 
@@ -48,14 +55,15 @@ conversation logs, runtime state, or secrets.
 The local stack is layered:
 
 ```text
-Codex CLI / OpenClaw / OpenHarness
+Codex CLI / OpenClaw / OpenHarness / Open WebUI
   -> local tools and project workspaces
   -> Ollama and remote model providers
   -> Obsidian notes and system health logs
 ```
 
 OpenClaw is the persistent assistant runtime. Ollama is the local model backend.
-The wrapper and timer keep newly installed Ollama chat models discoverable by
-OpenClaw.
+Open WebUI is the browser UI for local model chat, files, RAG, and controlled
+tool/function experiments. The wrapper and timer keep newly installed Ollama
+chat models discoverable by OpenClaw.
 
 See `INVENTORY.md` and `SECURITY.md` for the operational map and safety rules.

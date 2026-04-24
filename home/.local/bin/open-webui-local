@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /home/goringich/__home_organized/scripts/local-ai/open-webui "$@"

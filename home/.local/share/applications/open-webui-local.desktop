@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Open WebUI Local
+Comment=Local browser UI for Ollama models, files, RAG, tools, and functions
+Exec=/home/goringich/.local/bin/open-webui-local open
+Icon=applications-science
+Terminal=false
+Categories=Utility;X-AI;
