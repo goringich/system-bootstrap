@@ -15,11 +15,15 @@ cd system-bootstrap
 После restore и во время system-shaping работы:
 
 ```bash
+system-platform ci
+system-platform audit
 syscontrol
 syscontrol --compact
 syscontrol --tui
 syscontrol --sync-docs
 ```
+
+`system-platform` — фасад личного OS-platform pipeline: health gate, system-only coverage audit, repo inventory, validation, restore dry-run, and Obsidian report.
 
 `syscontrol` показывает:
 - что уже captured в `system-bootstrap` или personal GitHub repos
@@ -74,6 +78,7 @@ Runtime и логи лежат вне home root:
 - `configs/system-paths.txt` — список system-level путей, которые нужно capture/restore вместе с `system/`
 - `configs/repos.txt` — репозитории, которые нужно автоматически дотянуть после bootstrap
 - `configs/repos-all.txt` — полный manifest всех личных GitHub-репозиториев, найденных на основной машине
+- `configs/system-repos.txt` — system-only repo scope for the Personal OS Platform gate
 - `configs/repos-minimal.txt` — урезанный manifest для минимального подъёма
 - `configs/profiles/*.sh` — профили one-command bootstrap
 - `docs/repo-inventory.md` — автоматически собранная карта всех локальных git-репозиториев с классификацией

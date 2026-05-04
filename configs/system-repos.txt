@@ -1,0 +1,10 @@
+# name|path|role|tier
+system-bootstrap|$HOME/system-bootstrap|canonical post-install restore and system payload|core
+custom-cachyos-iso|$HOME/custom-cachyos-iso|install-time image and first-boot layer|core
+codex-orchestrator|$HOME/codex-orchestrator|Codex queue and agent automation layer|core
+home-organized|$HOME/__home_organized|portable operational scripts, logs, and small artifacts|core
+obsidian-voice-vocab|$HOME/__home_organized/scripts/obsidian-voice-vocab|personal Obsidian voice and vocabulary workflow|support
+obsidian-system-memory|$HOME/Desktop/Obsidian|architecture memory, runbooks, reports, and control tower|core
+obsidian-repo-mounts|$HOME/obsidian-repo-mounts|Obsidian/project mount glue|support
+dotfiles|$HOME/dotfiles|legacy local snapshot to retire or merge into system-bootstrap|legacy
+hyprland-nvidia-recovery-docs|$HOME/hyprland-nvidia-recovery-docs|legacy recovery docs to merge or publish|legacy

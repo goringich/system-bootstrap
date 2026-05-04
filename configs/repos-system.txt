@@ -1,0 +1,9 @@
+# name|repo_url|destination|branch
+Obsidian|git@github.com:goringich/Obsidian.git|$HOME/Desktop/Obsidian|master
+jJarvis-Translator-into-Obsidian|git@github.com:goringich/jJarvis-Translator-into-Obsidian.git|$HOME/__home_organized/scripts/obsidian-voice-vocab|main
+__home_organized|git@github.com:goringich/__home_organized.git|$HOME/__home_organized|master
+codex-orchestrator|git@github.com:goringich/codex-orchestrator.git|$HOME/codex-orchestrator|main
+my-custom-cachyos-iso|git@github.com:goringich/my-custom-cachyos-iso.git|$HOME/custom-cachyos-iso|master
+hyprland-nvidia-recovery-docs|git@github.com:goringich/hyprland-nvidia-recovery-docs.git|$HOME/hyprland-nvidia-recovery-docs|master
+obsidian-repo-mounts|git@github.com:goringich/obsidian-repo-mounts.git|$HOME/obsidian-repo-mounts|main
+system-bootstrap|git@github.com:goringich/system-bootstrap.git|$HOME/system-bootstrap|codex/local-ai-stack-snapshot

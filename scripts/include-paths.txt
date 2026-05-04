@@ -7,6 +7,7 @@
 .gitconfig
 .gtkrc-2.0
 .dmrc
+SYSTEM_DEBUG_START_HERE.md
 
 # Local scripts
 bootstrap-root-and-fix-nvidia.sh
@@ -63,9 +64,16 @@ verify-gpu-after-reboot.sh
 .config/xfce4
 
 .local/bin
+.local/bin/system-control-tui
+.local/bin/system-platform
 
+.local/share/applications/appscope.desktop
+.local/share/applications/chatgpt-ui.desktop
+.local/share/applications/claude-ui.desktop
+.local/share/applications/system-diagnose.desktop
 .local/share/applications/system-bootstrap-dry-run.desktop
 
 .config/codex-orchestrator
 .local/share/applications/codex-agent-orchestrator-run.desktop
 .local/share/applications/codex-agent-orchestrator-status.desktop
+__home_organized/scripts

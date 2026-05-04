@@ -3,9 +3,22 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCAN_ROOT="${SCAN_ROOT:-$HOME}"
-DOC_OUT="${DOC_OUT:-$REPO_ROOT/docs/repo-inventory.md}"
-MANIFEST_OUT="${MANIFEST_OUT:-$REPO_ROOT/configs/repos-all.txt}"
 EXCLUDES_FILE="${REPO_INVENTORY_EXCLUDES_FILE:-$REPO_ROOT/configs/repo-inventory-excludes.txt}"
+SYSTEM_REPOS_FILE="${SYSTEM_REPOS_FILE:-$REPO_ROOT/configs/system-repos.txt}"
+SYSTEM_REPO_SCOPE="${SYSTEM_REPO_SCOPE:-all}"
+
+if [[ "$SYSTEM_REPO_SCOPE" == "system" ]]; then
+  DOC_OUT="${DOC_OUT:-$REPO_ROOT/docs/system-repo-inventory.md}"
+  MANIFEST_OUT="${MANIFEST_OUT:-$REPO_ROOT/configs/repos-system.txt}"
+else
+  DOC_OUT="${DOC_OUT:-$REPO_ROOT/docs/repo-inventory.md}"
+  MANIFEST_OUT="${MANIFEST_OUT:-$REPO_ROOT/configs/repos-all.txt}"
+fi
+
+expand_path() {
+  local raw="$1"
+  HOME="${HOME:?}" eval "printf '%s\n' \"$raw\""
+}
 
 classify_repo() {
   local path="$1"
@@ -70,12 +83,44 @@ is_excluded_repo_path() {
   return 1
 }
 
+is_system_repo_path() {
+  local path="$1"
+  local _name raw_path _role _tier abs
+
+  [[ "$SYSTEM_REPO_SCOPE" == "system" ]] || return 0
+  [[ -f "$SYSTEM_REPOS_FILE" ]] || return 1
+
+  while IFS='|' read -r _name raw_path _role _tier; do
+    [[ -n "${_name:-}" ]] || continue
+    [[ "$_name" =~ ^# ]] && continue
+    abs="$(expand_path "$raw_path")"
+    [[ "$path" == "$abs" ]] && return 0
+  done < "$SYSTEM_REPOS_FILE"
+
+  return 1
+}
+
+git_value() {
+  local path="$1"
+  shift
+  git -C "$path" "$@" 2>/dev/null || true
+}
+
 while IFS= read -r gitdir; do
   path="$(dirname "$gitdir")"
   is_excluded_repo_path "$path" && continue
-  remote="$(git -C "$path" remote get-url origin 2>/dev/null || true)"
-  branch="$(git -C "$path" branch --show-current 2>/dev/null || true)"
-  dirty="$(git -C "$path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+  is_system_repo_path "$path" || continue
+  remote="$(git_value "$path" remote get-url origin)"
+  branch="$(git_value "$path" branch --show-current)"
+  if dirty_raw="$(git -C "$path" status --porcelain 2>/dev/null)"; then
+    if [[ -n "$dirty_raw" ]]; then
+      dirty="$(awk 'END{print NR}' <<<"$dirty_raw")"
+    else
+      dirty="0"
+    fi
+  else
+    dirty="error"
+  fi
   category="$(classify_repo "$path" "$remote")"
   printf '%s|%s|%s|%s|%s\n' "$path" "$remote" "$branch" "$dirty" "$category" >> "$tmp_inventory"
 done < <(
@@ -90,6 +135,7 @@ mkdir -p "$(dirname "$DOC_OUT")" "$(dirname "$MANIFEST_OUT")"
   printf '# repo-inventory\n\n'
   printf 'Generated: `%s`\n\n' "$(date -Is)"
   printf 'Scan root: `%s`\n\n' "$SCAN_ROOT"
+  printf 'Repo scope: `%s`\n\n' "$SYSTEM_REPO_SCOPE"
 
   total_count="$(wc -l < "$tmp_inventory" | tr -d ' ')"
   personal_count="$(awk -F'|' '$5=="personal-github"{count++} END{print count+0}' "$tmp_inventory")"

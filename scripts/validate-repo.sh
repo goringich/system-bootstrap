@@ -13,9 +13,11 @@ echo "==> Checking required manifests"
 required_files=(
   configs/repos.txt
   configs/repos-all.txt
+  configs/repos-system.txt
   configs/repos-minimal.txt
   configs/repo-inventory-excludes.txt
   configs/local-only-repos.txt
+  configs/system-repos.txt
   configs/system-paths.txt
   configs/rsync-excludes.txt
   scripts/include-paths.txt

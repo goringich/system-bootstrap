@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPORT_DIR="${SYSTEM_PLATFORM_REPORT_DIR:-$HOME/Desktop/Obsidian/System/Agent Runs}"
+STATE_DIR="${SYSTEM_PLATFORM_STATE_DIR:-$HOME/.local/state/system-platform}"
+LOG_DIR="${SYSTEM_PLATFORM_LOG_DIR:-$HOME/__home_organized/logs/system-platform}"
+REPORT_FILE="${SYSTEM_PLATFORM_REPORT_FILE:-$REPORT_DIR/$(date +%F) - system-platform-ci.md}"
+RUN_ID="$(date +%F_%H-%M-%S)"
+DRY_RUN=0
+
+usage() {
+  cat <<'USAGE'
+system-platform
+
+Usage:
+  system-platform ci [--dry-run]
+  system-platform audit
+  system-platform report
+  system-platform help
+
+Commands:
+  ci      Run the system-only personal OS platform gate.
+  audit   Refresh system-only runtime docs without capture.
+  report  Print the latest Obsidian report path.
+USAGE
+}
+
+run_cmd() {
+  local label="$1"
+  shift
+  printf '==> %s\n' "$label"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    printf '[dry-run] '
+    printf '%q ' "$@"
+    printf '\n'
+    return 0
+  fi
+  "$@"
+}
+
+append_report() {
+  mkdir -p "$REPORT_DIR" "$STATE_DIR" "$LOG_DIR/$RUN_ID"
+  cat >> "$REPORT_FILE"
+  ln -sfn "$REPORT_FILE" "$STATE_DIR/latest-report.md"
+}
+
+write_report_header() {
+  local dry_run_suffix=""
+  [[ "$DRY_RUN" -eq 1 ]] && dry_run_suffix=" --dry-run"
+  mkdir -p "$REPORT_DIR" "$STATE_DIR" "$LOG_DIR/$RUN_ID"
+  cat > "$REPORT_FILE" <<EOF
+# System Platform CI - $(date +%F)
+
+## Goal
+
+Run the system-only gate for the Personal OS Platform Megaproject.
+
+## Scope
+
+- system-bootstrap
+- custom-cachyos-iso
+- codex-orchestrator
+- __home_organized
+- Obsidian System memory
+- declared system repos from \`configs/system-repos.txt\`
+
+Project repos such as ESP, student work, sites, games, and random upstream clones are intentionally outside this gate.
+
+## Run
+
+- started: \`$(date -Is)\`
+- command: \`system-platform ci${dry_run_suffix}\`
+- workdir: \`$REPO_ROOT\`
+- log dir: \`$LOG_DIR/$RUN_ID\`
+
+EOF
+}
+
+write_report_footer() {
+  append_report <<EOF
+
+## Result
+
+- finished: \`$(date -Is)\`
+- report path: \`$REPORT_FILE\`
+- latest symlink: \`$STATE_DIR/latest-report.md\`
+
+## Notes
+
+This report is the human-readable audit trail. Git remains the source of truth for files.
+EOF
+}
+
+cmd_ci() {
+  write_report_header
+
+  append_report <<'EOF'
+## Steps
+
+EOF
+
+  run_cmd "health gate" system-diagnose >"$LOG_DIR/$RUN_ID/health.log"
+  append_report <<EOF
+- health gate: \`system-diagnose\` completed; full output in \`$LOG_DIR/$RUN_ID/health.log\`
+EOF
+
+  run_cmd "Hyprland config errors" hyprctl configerrors >"$LOG_DIR/$RUN_ID/hypr-configerrors.log"
+  append_report <<EOF
+- Hyprland config check: completed; output in \`$LOG_DIR/$RUN_ID/hypr-configerrors.log\`
+EOF
+
+  run_cmd "system-control system-only docs" env SYSTEM_CONTROL_REPO_SCOPE=system system-control --compact --sync-docs >"$LOG_DIR/$RUN_ID/system-control.log"
+  append_report <<EOF
+- system-control: system-only compact sync completed; output in \`$LOG_DIR/$RUN_ID/system-control.log\`
+EOF
+
+  run_cmd "repo inventory system-only" env SYSTEM_REPO_SCOPE=system bash "$REPO_ROOT/scripts/export-repo-inventory.sh" >"$LOG_DIR/$RUN_ID/repo-inventory.log"
+  append_report <<EOF
+- repo inventory: system-only inventory completed; output in \`$LOG_DIR/$RUN_ID/repo-inventory.log\`
+EOF
+
+  run_cmd "validate system-bootstrap" bash "$REPO_ROOT/scripts/validate-repo.sh" >"$LOG_DIR/$RUN_ID/validate.log"
+  append_report <<EOF
+- validation: \`scripts/validate-repo.sh\` completed; output in \`$LOG_DIR/$RUN_ID/validate.log\`
+EOF
+
+  run_cmd "restore dry-run" bash "$REPO_ROOT/bin/restore-my-system" --profile minimal --dry-run --skip-repos --skip-packages --skip-aur --skip-services --skip-configs --skip-system-overlay >"$LOG_DIR/$RUN_ID/restore-dry-run.log"
+  append_report <<EOF
+- restore dry-run: minimal no-apply gate completed; output in \`$LOG_DIR/$RUN_ID/restore-dry-run.log\`
+EOF
+
+  write_report_footer
+  printf 'system-platform: report=%s\n' "$REPORT_FILE"
+}
+
+cmd_audit() {
+  run_cmd "system-control system-only docs" env SYSTEM_CONTROL_REPO_SCOPE=system system-control --compact --sync-docs
+  run_cmd "repo inventory system-only" env SYSTEM_REPO_SCOPE=system bash "$REPO_ROOT/scripts/export-repo-inventory.sh"
+}
+
+cmd="${1:-help}"
+shift || true
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run) DRY_RUN=1; shift ;;
+    *) break ;;
+  esac
+done
+
+case "$cmd" in
+  ci) cmd_ci "$@" ;;
+  audit) cmd_audit "$@" ;;
+  report)
+    printf '%s\n' "$STATE_DIR/latest-report.md"
+    ;;
+  help|-h|--help) usage ;;
+  *)
+    echo "Unknown command: $cmd" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
