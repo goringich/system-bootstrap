@@ -1,0 +1,7 @@
+[Unit]
+Description=Archive oversized Hyprland runtime logs
+
+[Service]
+Type=oneshot
+Nice=10
+ExecStart=/home/goringich/__home_organized/scripts/hyprland-log-guard.sh

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Hyprland runtime log guard periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=hyprland-log-guard.service
+
+[Install]
+WantedBy=timers.target
