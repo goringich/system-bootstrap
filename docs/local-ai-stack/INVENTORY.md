@@ -94,11 +94,18 @@ Runtime:
 Model wiring:
 
 - Ollama base URL: `http://127.0.0.1:11434`
-- default model: `mdq100/qwen3.5-coder:35b`
-- task/fast model: `gpt-oss:20b`
+- default model: `gpt-oss:20b`
+- task model: `gpt-oss:20b`
+- pinned models:
+  - `gpt-oss:20b`
+  - `mdq100/qwen3.5-coder:35b`
+  - `qwen3.6:27b`
+  - `qwen3.6:35b-a3b`
 - RAG embedding engine: `ollama`
 - RAG embedding model: `nomic-embed-text:latest`
 - hybrid RAG search: enabled
+- retrieval query generation: enabled
+- RAG system context: enabled
 - web search: disabled by default
 
 Commands:
@@ -125,6 +132,7 @@ Commands:
 local-ai-control status
 local-ai-control dashboard
 local-ai-control json
+ollama-profile-manager rag-bench
 ```
 
 The dashboard records:
@@ -136,6 +144,21 @@ The dashboard records:
 - OpenClaw status summary
 - candidate next-layer tools researched for the stack: Open WebUI, AnythingLLM,
   Qdrant, and R2R
+- the fixed retrieval gate now lives at
+  `~/__home_organized/scripts/local-ai/rag-bench.py` with questions in
+  `~/__home_organized/runtime/local-ai/rag-bench/questions.json`
+
+Current role map from `local-ai-control doctor` on `2026-05-12`:
+
+- heavy coding: `qwen3-coder-next:q8_0`
+- balanced coding: `mdq100/qwen3.5-coder:35b`
+- fast draft: `gpt-oss:20b`
+- embeddings: `nomic-embed-text:latest`
+
+## Documentation Contract
+
+- If local AI architecture, model roles, prompts, bootstrap paths, or RAG settings change, update the matching Obsidian notes in the same task.
+- Keep the live prompt copy, tracked mirror, and Obsidian architecture notes aligned.
 
 ## GitHub Placement
 

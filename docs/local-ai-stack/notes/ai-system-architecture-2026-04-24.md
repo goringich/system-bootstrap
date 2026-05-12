@@ -1,5 +1,7 @@
 # AI система на этом ПК — полная архитектура 2026-04-24
 
+> Update 2026-05-12: считать эту заметку tracked mirror канонического обзора local-first AI архитектуры на машине. Центр системы теперь не Codex и не облачные провайдеры, а связка `Ollama` + `OpenClaw` + `Open WebUI` + `OpenHarness` + `Obsidian`.
+
 См. также:
 
 - [[OpenClaw/OpenClaw]]
@@ -9,6 +11,16 @@
 - [[System/System Blueprint/16 Codex Configuration Map]]
 
 ## Коротко
+
+### Override 2026-05-12
+
+- Архитектурный центр: локальные нейронки и их operational/docs слой, а не внешний агент.
+- `Ollama` остается единым локальным model backend на `http://127.0.0.1:11434/v1`.
+- `Open WebUI` на `http://127.0.0.1:3030` является основным browser UI для локальных моделей и RAG.
+- Проверенные live defaults Open WebUI на `2026-05-12`: `DEFAULT_MODELS=gpt-oss:20b`, `TASK_MODEL=gpt-oss:20b`, `RAG_EMBEDDING_MODEL=nomic-embed-text:latest`, `ENABLE_RAG_HYBRID_SEARCH=true`, `RAG_SYSTEM_CONTEXT=true`.
+- Проверенный default route OpenClaw на `2026-05-12`: primary `ollama/gpt-oss:20b`, fallbacks `ollama/qwen3.6:27b`, `ollama/mdq100/qwen3.5-coder:35b`.
+- Роли локальных моделей по `local-ai-control doctor` на `2026-05-12`: heavy `qwen3-coder-next:q8_0`, balanced `mdq100/qwen3.5-coder:35b`, fast `gpt-oss:20b`, embeddings `nomic-embed-text:latest`.
+- Любой агент на этой машине должен считать улучшение local AI stack и поддержание актуальности его документации частью своей работы.
 
 На этом ПК нет одной "магической ИИшки". Здесь уже собран **многослойный AI-стек**, где разные системы решают разные классы задач:
 
@@ -29,6 +41,27 @@
   -> локальные и подписочные модели
   -> Obsidian как долговременная память и архитектурный журнал
 ```
+
+## Documentation Contract 2026-05-12
+
+Если любой агент меняет что-то из этого:
+
+- роли локальных моделей
+- маршрутизацию `OpenClaw` / `Open WebUI` / `OpenHarness`
+- `Ollama` runtime defaults
+- RAG embedding/reranker/query-generation behavior
+- bootstrap или prompt-файлы, по которым стартуют другие агенты
+- архитектурное разделение между локальными и внешними агентами
+
+он обязан в том же проходе обновить:
+
+- эту заметку
+- профильную заметку в `ИИ/`
+- `~/__home_organized/llms.txt`
+- `~/__home_organized/llms-full.txt`
+- соответствующий live prompt / `AGENTS.md`, если изменилось поведение агента
+
+Недопустимо обновлять runtime без синхронизации Obsidian и bootstrap docs.
 
 ## 1. Уровни системы
 

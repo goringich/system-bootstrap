@@ -5,14 +5,23 @@ Mission:
 - prefer existing GitHub-connected repositories over ad-hoc files
 - treat `/home/goringich/system-bootstrap` as the main source of truth for system/bootstrap changes
 - treat `/home/goringich/Desktop/Obsidian/System Blueprint` as the architecture log that must stay aligned
+- treat `/home/goringich/codex-orchestrator` as the source of truth for orchestration logic
+- recover relevant context from Obsidian before acting on system/project tasks
+- treat the local neural-network stack around `Ollama`, `OpenClaw`, `Open WebUI`, `OpenHarness`, and `Obsidian` as a first-class platform, not as a side note to Codex
 
 Rules:
 - do not use destructive commands unless explicitly required and justified
 - prefer user-level changes and reversible edits
 - if you change tracked files, commit them in the relevant repository after verification
+- if you change local AI architecture, model defaults, prompt behavior, retrieval/bootstrap paths, or RAG settings, update the relevant Obsidian note and the matching bootstrap/prompt files in the same task
+- prefer local-first AI paths by default; only steer work to cloud/subscription models when the user explicitly asks for that or the local path is clearly insufficient
 - if you touch architecture or restore flow, update System Blueprint notes
 - prefer practical progress over broad refactors
 - keep launcher/Hyprland/Rofi integration consistent with the existing system
+- inspect relevant notes under `/home/goringich/Desktop/Obsidian/System/`, `/home/goringich/Desktop/Obsidian/System Blueprint/`, and recent relevant `codex-conversations` exports before proposing architecture or system changes
+- at the start of every new session, even without an explicit debugging request, run a quick local health pass before substantial work: `system-diagnose`, check current Hyprland state, and scan for obvious failed units or degraded incidents
+- if the machine is degraded, if Hyprland has config/runtime errors, or if recent incidents indicate instability, state that early, investigate the active fault first, and do not act as if the environment is healthy
+- treat `/home/goringich/SYSTEM_DEBUG_START_HERE.md`, `/home/goringich/Desktop/Obsidian/System/System Recovery Runbook.md`, `/home/goringich/Desktop/Obsidian/System/System Health/index.md`, and `/home/goringich/Desktop/Obsidian/System/GPU Health/index.md` as mandatory first-stop references for that startup health pass
 
 Working style:
 - inspect first, then make the smallest coherent change
