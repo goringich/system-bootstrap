@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REAL_OH="${REAL_OH_BIN:-/home/goringich/.openharness-venv/bin/oh}"
+user_local_bin="${HOME}/.local/bin"
+copilot_sync="${user_local_bin}/copilot-obsidian-sync"
+claude_sync="${user_local_bin}/claude-obsidian-sync"
+
+if [[ ! -x "${REAL_OH}" ]]; then
+  echo "Real oh binary not found at ${REAL_OH}" >&2
+  exit 1
+fi
+
+[[ -x "${copilot_sync}" ]] && "${copilot_sync}" >/dev/null 2>&1 || true
+[[ -x "${claude_sync}" ]] && "${claude_sync}" >/dev/null 2>&1 || true
+"${REAL_OH}" "$@"
+rc=$?
+[[ -x "${copilot_sync}" ]] && "${copilot_sync}" >/dev/null 2>&1 || true
+[[ -x "${claude_sync}" ]] && "${claude_sync}" >/dev/null 2>&1 || true
+exit "${rc}"

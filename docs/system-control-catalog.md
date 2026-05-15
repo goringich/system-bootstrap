@@ -2,7 +2,7 @@
 
 ## Control Score
 
-- score: `43/100`
+- score: `53/100`
 - lane: `red`
 
 ## Summary
@@ -12,7 +12,7 @@
 - local-only repos: `1`
 - declared but not captured: `0`
 - uncovered live paths: `88`
-- promote next: `18`
+- promote next: `13`
 - review later: `7`
 - likely noise: `58`
 - secret-risk files: `2`
@@ -31,14 +31,9 @@
 - `.config/shell` -> shell support layer should not drift outside source of truth
 - `.config/zellij` -> terminal workspace identity is part of the personal environment
 - `.local/bin/check-mic.sh` -> audio diagnostics helper should be part of the canonical mic workflow
-- `.local/bin/claude-local` -> local Claude routing wrapper should be canonical if this flow is kept
-- `.local/bin/claude-obsidian-sync` -> Claude transcript export should be part of the shared Obsidian capture workflow
-- `.local/bin/copilot-obsidian-sync` -> Copilot transcript export should be part of the shared Obsidian capture workflow
 - `.local/bin/easyeffects-start.sh` -> audio wrapper should be part of the canonical desktop audio layer
 - `.local/bin/easyeffects` -> audio wrapper should be part of the canonical desktop audio layer
 - `.local/bin/mic-rollback.sh` -> audio rollback helper should be restorable
-- `.local/bin/oh` -> OpenHarness wrapper should be canonical if local-agent routing depends on it
-- `.local/bin/ollama` -> Ollama wrapper should be canonical if local sync hooks depend on it
 - `.local/bin/skif777-switch` -> controlled VPN switching helper should be tracked or intentionally retired
 - `.local/bin/telegram-profile` -> multi-profile Telegram launcher is part of desktop identity
 

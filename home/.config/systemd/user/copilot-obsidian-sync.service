@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync Copilot conversations to Obsidian markdown
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/.local/bin/copilot-obsidian-sync

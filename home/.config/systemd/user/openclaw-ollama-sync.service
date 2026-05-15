@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync installed Ollama models into OpenClaw catalogs
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/__home_organized/scripts/openclaw_ollama_sync.py
