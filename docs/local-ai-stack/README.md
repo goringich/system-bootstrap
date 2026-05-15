@@ -64,6 +64,13 @@ Codex CLI / OpenClaw / OpenHarness / Open WebUI
   -> Obsidian notes and system health logs
 ```
 
+That top layer is also a shared machine RAG surface. Codex does not get a
+special private context path here: its bootstrap and retrieval flow are part of
+the same local knowledge layer as OpenClaw, Open WebUI Knowledge, and Obsidian.
+The practical entrypoints are `AGENTS.md`, `manager-prompt.txt`, `llms.txt`,
+`llms-full.txt`, `obsidian-context-pack.py`, `agent-context-bootstrap.py`, and
+the Obsidian architecture notes that describe the stack.
+
 OpenClaw is the persistent assistant runtime. Ollama is the local model backend.
 Open WebUI is the browser UI for local model chat, files, RAG, and controlled
 tool/function experiments. The wrapper and timer keep newly installed Ollama

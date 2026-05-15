@@ -4,6 +4,10 @@
 
 - Codex CLI: interactive coding/system agent.
 - Codex orchestrator: queued background Codex tasks.
+- Codex bootstrap and retrieval layer: `AGENTS.md`, `manager-prompt.txt`,
+  `llms.txt`, `llms-full.txt`, `obsidian-context-pack.py`,
+  `agent-context-bootstrap.py`, and the aligned Obsidian notes that together
+  form Codex's entry into the machine-wide RAG.
 - OpenClaw: persistent local gateway, Telegram routing, project agents.
 - Ollama: local inference backend and model registry.
 - OpenHarness: separate local harness on top of Ollama.
@@ -66,9 +70,14 @@ The timer refreshes catalogs without forcing a gateway restart every interval.
 - `~/__home_organized/scripts/ollama_hw_obsidian_logger.py`
 - `~/__home_organized/scripts/waybar-ai-usage.py`
 - `~/__home_organized/scripts/local-ai-control.py`
+- `~/__home_organized/scripts/obsidian-context-pack.py`
+- `~/__home_organized/scripts/agent-context-bootstrap.py`
+- `~/__home_organized/llms.txt`
+- `~/__home_organized/llms-full.txt`
 - `~/.local/bin/local-ai-control`
 - `~/.local/share/applications/local-ai-control.desktop`
 - `~/Desktop/Obsidian/ИИ/Local AI Control Center.md`
+- `~/Desktop/Obsidian/ИИ/AI система на этом ПК — полная архитектура 2026-04-24.md`
 - `~/__home_organized/runtime/local-ai/open-webui/compose.yaml`
 - `~/__home_organized/scripts/local-ai/open-webui`
 - `~/.local/bin/open-webui-local`
@@ -158,6 +167,7 @@ Current role map from `local-ai-control doctor` on `2026-05-12`:
 ## Documentation Contract
 
 - If local AI architecture, model roles, prompts, bootstrap paths, or RAG settings change, update the matching Obsidian notes in the same task.
+- If Codex bootstrap, retrieval, or system documentation behavior changes, treat that as the same local RAG contract and update the matching Obsidian notes plus prompt/bootstrap files in the same task.
 - Keep the live prompt copy, tracked mirror, and Obsidian architecture notes aligned.
 
 ## GitHub Placement
