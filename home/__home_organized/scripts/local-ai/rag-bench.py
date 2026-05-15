@@ -19,6 +19,19 @@ DEFAULT_INVENTORY = HOME / "__home_organized/docs/codex-local-context/context-in
 DEFAULT_QUESTIONS = HOME / "__home_organized/runtime/local-ai/rag-bench/questions.json"
 SEARCH_SUFFIXES = {".md", ".txt", ".json", ".yaml", ".yml", ".py", ".sh", ".toml", ".conf"}
 MAX_DOC_CHARS = 2000
+PRIORITY_FILE_BONUS = 24
+DEFAULT_SCOPE_EXCLUDES: dict[str, tuple[str, ...]] = {
+    "local-ai": (
+        "codex-conversations/",
+        "/conversations/",
+        "/промпты/",
+    ),
+    "all": (
+        "codex-conversations/",
+        "/conversations/",
+        "/промпты/",
+    ),
+}
 
 
 def expand_path(raw: str) -> Path:
@@ -147,6 +160,12 @@ def matches_expected(path: Path, expected_any: list[str]) -> bool:
     return any(needle in path_lower for needle in expected_any)
 
 
+def default_exclude_substrings(scope: str, include_conversations: bool) -> list[str]:
+    if include_conversations:
+        return []
+    return list(DEFAULT_SCOPE_EXCLUDES.get(scope, ()))
+
+
 def bench_question(
     *,
     question: dict[str, object],
@@ -156,18 +175,24 @@ def bench_question(
     embeddings_cache: dict[tuple[str, str], list[float]],
     candidate_limit: int,
     top_k: int,
+    include_conversations: bool,
 ) -> dict[str, object]:
     scope = str(question.get("scope") or "all")
     query = str(question.get("query") or "").strip()
     qid = str(question.get("id") or query or scope)
     expected_any = [str(item).lower() for item in question.get("expected_any", []) if str(item).strip()]
-    exclude_substrings = [str(item).lower() for item in question.get("exclude_substrings", []) if str(item).strip()]
+    exclude_substrings = default_exclude_substrings(scope, include_conversations)
+    exclude_substrings.extend(
+        str(item).lower() for item in question.get("exclude_substrings", []) if str(item).strip()
+    )
+    exclude_substrings = list(dict.fromkeys(exclude_substrings))
     if scope not in inventory:
         raise ValueError(f"question {qid}: unknown scope {scope}")
     if not query:
         raise ValueError(f"question {qid}: missing query")
 
     docs = corpora.setdefault(scope, [(path, read_doc_text(path)) for path in iter_text_files(inventory[scope])])
+    priority_paths = {path for path in inventory[scope].get("files", [])}
     if exclude_substrings:
         docs = [
             (path, text)
@@ -176,7 +201,14 @@ def bench_question(
         ]
     terms = tokenize(query)
     ranked = sorted(
-        ((lexical_score(path, text, terms), path, text) for path, text in docs),
+        (
+            (
+                lexical_score(path, text, terms) + (PRIORITY_FILE_BONUS if path in priority_paths else 0),
+                path,
+                text,
+            )
+            for path, text in docs
+        ),
         key=lambda item: (-item[0], str(item[1])),
     )
     candidates = [item for item in ranked[:candidate_limit] if item[0] > 0]
@@ -264,6 +296,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--questions", default=str(DEFAULT_QUESTIONS))
     parser.add_argument("--candidate-limit", type=int, default=12)
     parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument(
+        "--include-conversations",
+        action="store_true",
+        help="Include conversation mirrors and prompt-heavy note trees in the benchmark corpus",
+    )
     args = parser.parse_args(argv[1:])
 
     inventory = load_inventory(Path(args.inventory).expanduser())
@@ -281,6 +318,7 @@ def main(argv: list[str]) -> int:
                 embeddings_cache=embeddings_cache,
                 candidate_limit=args.candidate_limit,
                 top_k=args.top_k,
+                include_conversations=args.include_conversations,
             )
             for question in questions
         ]

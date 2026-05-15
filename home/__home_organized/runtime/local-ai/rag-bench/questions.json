@@ -56,5 +56,16 @@
     "expected_any": [
       "__home_organized/scripts/obsidian-context-pack.py"
     ]
+  },
+  {
+    "id": "shared-rag-contract",
+    "scope": "local-ai",
+    "query": "где у меня описано что codex bootstrap и системные заметки входят в общий local rag слой",
+    "expected_any": [
+      "ии/ai система на этом пк — полная архитектура 2026-04-24.md",
+      "ии/open webui local.md",
+      "__home_organized/llms-full.txt",
+      "system blueprint/20 codex local context architecture.md"
+    ]
   }
 ]
