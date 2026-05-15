@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Obsidian
+Comment=Obsidian
+Exec=/home/goringich/.local/bin/obsidian %U
+TryExec=/home/goringich/.local/bin/obsidian
+Icon=obsidian
+StartupWMClass=obsidian
+Terminal=false
+MimeType=x-scheme-handler/obsidian;
+Categories=Office;
+Keywords=obsidian;notes;knowledge;markdown;
