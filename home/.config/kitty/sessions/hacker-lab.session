@@ -1,0 +1,17 @@
+new_tab title Termjam
+launch bash -lc "$HOME/termjam.py"
+
+new_tab title btop
+launch bash -lc "btop"
+
+new_tab title lazygit
+launch bash -lc "lazygit || exec bash"
+
+new_tab title broot
+launch bash -lc "broot || exec bash"
+
+new_tab title zellij
+launch bash -lc "zellij || exec bash"
+
+new_tab title fastfetch
+launch bash -lc "fastfetch; exec bash"

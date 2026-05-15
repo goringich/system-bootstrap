@@ -4,7 +4,12 @@ export ELECTRON_DISABLE_SECURITY_WARNINGS=1
 export ELECTRON_ENABLE_LOGGING=false
 export NO_AT_BRIDGE=1
 
-exec /usr/bin/discord \
+DISCORD_BIN="/usr/bin/discord"
+if [ ! -x "${DISCORD_BIN}" ]; then
+  DISCORD_BIN="${HOME}/.local/opt/discord/current/Discord"
+fi
+
+exec "${DISCORD_BIN}" \
   --no-sandbox \
   --disable-gpu \
   --disable-extensions \

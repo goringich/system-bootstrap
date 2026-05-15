@@ -5,14 +5,50 @@
 
 set -euo pipefail
 
+default_profile="Default"
+quarantine_file="${HOME}/.local/state/gpu-watchdog/quarantine.env"
+scale_state="${HOME}/__home_organized/runtime/hypr-scaling/current.env"
+chrome_scale="1"
+
+if [[ -f "${scale_state}" ]]; then
+  # shellcheck disable=SC1090
+  source "${scale_state}"
+  chrome_scale="${HYPR_CHROME_DEVICE_SCALE:-${chrome_scale}}"
+fi
+
 flags=(
-  --ozone-platform-hint=auto
-  --enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer
+  --profile-directory=${default_profile}
   --disable-features=UseChromeOSDirectVideoDecoder
   --disable-background-mode
 )
 
+# Native Wayland Chrome on NVIDIA has been unstable here and can come up
+# without working WebGL. Default to XWayland unless explicitly overridden.
+if [[ "${CHROME_FORCE_WAYLAND:-0}" == "1" ]]; then
+  flags+=(
+    --ozone-platform-hint=auto
+    --enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer
+  )
+else
+  flags+=(
+    --ozone-platform=x11
+    --disable-features=UseOzonePlatform
+    --force-device-scale-factor=${chrome_scale}
+  )
+fi
+
 args=("$@")
+if [[ -f "${quarantine_file}" ]]; then
+  # shellcheck disable=SC1090
+  source "${quarantine_file}"
+  if [[ "${GPU_QUARANTINE:-0}" == "1" ]]; then
+    flags+=(
+      --disable-accelerated-video-decode
+      --disable-gpu
+      --disable-gpu-compositing
+    )
+  fi
+fi
 for f in "${flags[@]}"; do
   skip=false
   for a in "${args[@]}"; do

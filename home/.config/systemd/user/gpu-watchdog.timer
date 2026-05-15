@@ -1,0 +1,11 @@
+[Unit]
+Description=Run GPU watchdog periodically
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=2min
+Persistent=true
+Unit=gpu-watchdog.service
+
+[Install]
+WantedBy=timers.target

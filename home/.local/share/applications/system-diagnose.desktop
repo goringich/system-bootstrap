@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=System Diagnose
+Comment=Run the unified system self-check and save a report
+Exec=kitty --hold /bin/bash -lc system-diagnose
+Icon=utilities-terminal
+Terminal=false
+Categories=System;
+StartupNotify=true

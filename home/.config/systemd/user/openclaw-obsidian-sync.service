@@ -1,0 +1,7 @@
+[Unit]
+Description=Sync OpenClaw conversations to Obsidian markdown
+ConditionPathExists=!%h/.local/state/session-startup-guard/disable-nonessential-user-timers
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/.local/bin/openclaw-obsidian-sync

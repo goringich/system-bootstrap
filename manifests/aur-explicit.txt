@@ -1,1 +1,6 @@
+anydesk-bin
+cursor-bin
 google-chrome
+splix
+teamviewer
+wallust

@@ -5,15 +5,14 @@
 PROCESS="hypridle"
 
 if [[ "$1" == "status" ]]; then
-    sleep 1
     if pgrep -x "$PROCESS" >/dev/null; then
-        echo '{"text": "RUNNING", "class": "active", "tooltip": "idle_inhibitor NOT ACTIVE\nLeft Click: Activate\nRight Click: Lock Screen"}'
+        echo '{"text": " ", "class": "inactive", "tooltip": "Idle actions enabled\nLeft Click: Keep the PC awake\nRight Click: Lock screen"}'
     else
-        echo '{"text": "NOT RUNNING", "class": "notactive", "tooltip": "idle_inhibitor is ACTIVE\nLeft Click: Deactivate\nRight Click: Lock Screen"}'
+        echo '{"text": " ", "class": "active", "tooltip": "Stay awake enabled\nIdle-based lock/suspend is paused\nLeft Click: Restore idle actions\nRight Click: Lock screen"}'
     fi
 elif [[ "$1" == "toggle" ]]; then
     if pgrep -x "$PROCESS" >/dev/null; then
-        pkill "$PROCESS"
+        pkill -x "$PROCESS"
     else
         "$PROCESS" >/dev/null 2>&1 &
         disown

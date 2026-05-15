@@ -1,0 +1,11 @@
+[Unit]
+Description=Run system watchdog periodically
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=10min
+Persistent=true
+Unit=system-watchdog.service
+
+[Install]
+WantedBy=timers.target

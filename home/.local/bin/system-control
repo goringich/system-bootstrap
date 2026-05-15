@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script="$HOME/__home_organized/scripts/system-control-center.sh"
+tui_script="$HOME/.local/bin/system-control-tui"
+
+if [[ "${1:-}" == "--tui" ]]; then
+  shift
+  if [[ ! -x "$tui_script" ]]; then
+    echo "system-control: missing TUI wrapper: $tui_script" >&2
+    exit 1
+  fi
+  exec "$tui_script" "$@"
+fi
+
+if [[ ! -f "$script" ]]; then
+  echo "system-control: missing script: $script" >&2
+  exit 1
+fi
+
+exec bash "$script" "$@"

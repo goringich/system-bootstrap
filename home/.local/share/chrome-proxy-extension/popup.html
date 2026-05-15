@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chrome Proxy</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Foreign Site Proxy</p>
+        <div class="hero-top">
+          <div>
+            <h1>Chrome Proxy</h1>
+            <p id="status" class="status">Loading...</p>
+          </div>
+          <button id="toggle" type="button" class="pill">Disable</button>
+        </div>
+        <div class="summary-grid">
+          <article class="summary-card">
+            <span class="summary-label">Endpoint</span>
+            <strong id="summaryEndpoint">-</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">Auth</span>
+            <strong id="summaryAuth">-</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">Checks</span>
+            <strong id="summaryChecks">-</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Status Board</p>
+            <h2>Foreign sites</h2>
+          </div>
+          <button id="probe" type="button" class="ghost">Test now</button>
+        </div>
+        <p id="probeMeta" class="meta">No checks yet.</p>
+        <div id="probeList" class="probe-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Connection</p>
+            <h2>Proxy settings</h2>
+          </div>
+          <button id="save" type="button">Save settings</button>
+        </div>
+        <label class="field">
+          <span>Scheme</span>
+          <select id="scheme">
+            <option value="socks5">SOCKS5</option>
+            <option value="socks4">SOCKS4</option>
+            <option value="http">HTTP</option>
+            <option value="https">HTTPS</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Host</span>
+          <input id="host" type="text" spellcheck="false">
+        </label>
+        <div class="row">
+          <label class="field">
+            <span>Port</span>
+            <input id="port" type="number" min="1" max="65535">
+          </label>
+          <label class="field">
+            <span>User</span>
+            <input id="username" type="text" spellcheck="false">
+          </label>
+        </div>
+        <label class="field">
+          <span>Password</span>
+          <input id="password" type="password" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Direct domains</span>
+          <textarea id="bypassDomains" rows="7"></textarea>
+        </label>
+        <p class="hint">Default route uses the public authenticated HTTP proxy on <code>server-178</code> at <code>178.236.253.46:18080</code>. The built-in account is prefilled so the browser route works immediately inside this isolated profile.</p>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

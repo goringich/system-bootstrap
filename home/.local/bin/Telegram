@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+scale_state="${HOME}/__home_organized/runtime/hypr-scaling/current.env"
+qt_scale=""
+
+if [[ -f "${scale_state}" ]]; then
+  # shellcheck disable=SC1090
+  source "${scale_state}"
+  qt_scale="${HYPR_QT_SCALE:-${HYPR_QT_X11_SCALE:-}}"
+fi
+
+telegram_env=(env)
+if [[ -n "${qt_scale}" ]]; then
+  telegram_env+=(QT_SCALE_FACTOR="${qt_scale}")
+fi
+
+if [[ "${TELEGRAM_FORCE_WAYLAND:-0}" != "1" ]]; then
+  telegram_env+=(
+    QT_QPA_PLATFORM=xcb
+    GDK_BACKEND=x11
+    WEBKIT_DISABLE_COMPOSITING_MODE=1
+  )
+fi
+
+exec "${telegram_env[@]}" /usr/bin/Telegram "$@"

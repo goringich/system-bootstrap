@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REAL_CODEX="${REAL_CODEX_BIN:-/usr/bin/codex}"
+owner_home="${CODEX_OWNER_HOME:-${HOME:-/home/goringich}}"
+enter_steer_script="${owner_home}/__home_organized/scripts/codex-enter-steer.py"
+
+if [[ "$(id -u)" -eq 0 ]]; then
+  owner_user="${SUDO_USER:-${USER:-goringich}}"
+  if owner_entry="$(getent passwd "$owner_user" 2>/dev/null)"; then
+    owner_home="$(cut -d: -f6 <<<"$owner_entry")"
+  fi
+
+  export HOME="$owner_home"
+  export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$owner_home/.config}"
+  export XDG_DATA_HOME="${XDG_DATA_HOME:-$owner_home/.local/share}"
+  export XDG_STATE_HOME="${XDG_STATE_HOME:-$owner_home/.local/state}"
+  export CODEX_OWNER_HOME="$owner_home"
+fi
+
+user_local_bin="${owner_home}/.local/bin"
+sync_cmd="${user_local_bin}/codex-obsidian-sync"
+
+if [[ ! -x "$REAL_CODEX" ]]; then
+  echo "Real codex binary not found at $REAL_CODEX" >&2
+  exit 1
+fi
+
+[[ -x "$sync_cmd" ]] && "$sync_cmd" >/dev/null 2>&1 || true
+
+subcommand="${1:-}"
+case "$subcommand" in
+  queue-add)
+    shift
+    exec "${user_local_bin}/codex-agent-enqueue" "$@"
+    ;;
+  queue-system)
+    shift
+    exec "${user_local_bin}/codex-agent-enqueue-system" "$@"
+    ;;
+  queue-run)
+    shift
+    exec "${user_local_bin}/codex-agent-run" "$@"
+    ;;
+  queue-status)
+    shift
+    exec "${user_local_bin}/codex-agent-status" "$@"
+    ;;
+esac
+
+approval_args=()
+for arg in "$@"; do
+  case "$arg" in
+    -a|--ask-for-approval)
+      approval_args=()
+      break
+      ;;
+  esac
+done
+
+if [[ ${#approval_args[@]} -eq 0 ]]; then
+  approval_args=(-a on-request)
+fi
+
+[[ -x "$sync_cmd" ]] && "$sync_cmd" >/dev/null 2>&1 || true
+interactive_tui=true
+case "${1:-}" in
+  "" )
+    ;;
+  exec|e|review|login|logout|mcp|mcp-server|app-server|completion|sandbox|debug|apply|a|resume|fork|cloud|features|help )
+    interactive_tui=false
+    ;;
+  -* )
+    ;;
+  * )
+    ;;
+esac
+
+if [[ "${CODEX_ENTER_STEER:-1}" != "0" && "$interactive_tui" == true && -t 0 && -t 1 && -x "$enter_steer_script" ]]; then
+  python3 "$enter_steer_script" "$REAL_CODEX" "${approval_args[@]}" "$@"
+else
+  "$REAL_CODEX" "${approval_args[@]}" "$@"
+fi
+rc=$?
+[[ -x "$sync_cmd" ]] && "$sync_cmd" >/dev/null 2>&1 || true
+exit "$rc"

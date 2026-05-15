@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Proxy Profile",
+  "version": "1.2.0",
+  "description": "Profile-local proxy controller for the dedicated Chrome proxy profile.",
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "permissions": [
+    "proxy",
+    "storage",
+    "webRequest",
+    "webRequestAuthProvider"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Chrome Proxy",
+    "default_popup": "popup.html"
+  }
+}

@@ -1,0 +1,589 @@
+#!/usr/bin/env python3
+import json
+import re
+import subprocess
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+AGENTS_ROOT = Path("/home/goringich/.openclaw/agents")
+OUT_ROOT = Path("/home/goringich/Desktop/Obsidian/ИИ/OpenClaw/Conversations")
+VAULT_ROOT = Path("/home/goringich/Desktop/Obsidian")
+STATE_FILE = Path("/home/goringich/.local/state/openclaw-obsidian-sync/state.json")
+MAX_CHARS_PER_PART = 25000
+EXPORT_FORMAT_VERSION = 2
+
+LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+CYRILLIC_MAP = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e", "ж": "zh",
+    "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o",
+    "п": "p", "р": "r", "с": "s", "т": "t", "у": "u", "ф": "f", "х": "h", "ц": "ts",
+    "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu",
+    "я": "ya",
+}
+NOISE_PATTERNS = (
+    "A new session was started via /new or /reset.",
+    "Read HEARTBEAT.md if it exists",
+    "Current time:",
+    "HEARTBEAT_OK",
+)
+
+
+@dataclass
+class Msg:
+    role: str
+    text: str
+    ts: str
+
+
+def extract_text(content):
+    parts = []
+    if not isinstance(content, list):
+        return ""
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") != "text":
+            continue
+        text = item.get("text", "")
+        if isinstance(text, str) and text.strip():
+            parts.append(text.strip())
+    return "\n\n".join(parts).strip()
+
+
+def cleanup_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text.strip())
+
+
+def strip_metadata_blocks(text: str) -> str:
+    for pattern in (
+        r"(?:^|\n)Conversation info \(untrusted metadata\):\n```json\n.*?\n```\n*",
+        r"(?:^|\n)Sender \(untrusted metadata\):\n```json\n.*?\n```\n*",
+    ):
+        text = re.sub(pattern, "\n", text, flags=re.DOTALL)
+    text = re.sub(r"^\[[^\]]+\]\s*", "", text.strip())
+    text = re.sub(r"^System:\s*\[[^\]]+\]\s*", "", text.strip())
+    return text.strip()
+
+
+def is_noise_question(text: str) -> bool:
+    if not text:
+        return True
+    for pattern in NOISE_PATTERNS:
+        if pattern in text:
+            return True
+    return False
+
+
+def slugify(text: str, max_len: int = 64) -> str:
+    out = []
+    for ch in text.lower():
+        if "a" <= ch <= "z" or "0" <= ch <= "9":
+            out.append(ch)
+            continue
+        if ch in CYRILLIC_MAP:
+            out.append(CYRILLIC_MAP[ch])
+            continue
+        if ch in (' ', '-', '_', '/', '\\', '.', ',', ':', ';', '!', '?', '(', ')', '[', ']', '{', '}', '+', '=', '"', "'", '`'):
+            out.append("-")
+    slug = re.sub(r"-+", "-", "".join(out)).strip("-")
+    if not slug:
+        slug = "conversation"
+    return slug[:max_len].strip("-") or "conversation"
+
+
+def sanitize_links(text: str) -> str:
+    def _repl(match):
+        label = match.group(1).strip()
+        target = match.group(2).strip()
+        if target.startswith("#"):
+            return label
+        p = Path(target)
+        try:
+            resolved = p.resolve() if p.is_absolute() else (VAULT_ROOT / p).resolve()
+        except Exception:
+            resolved = None
+        if resolved is not None:
+            try:
+                rel = resolved.relative_to(VAULT_ROOT)
+                if rel.suffix.lower() == ".md":
+                    return f"[[{rel.with_suffix('').as_posix()}|{label}]]"
+            except Exception:
+                pass
+        if label == target:
+            return label
+        return f"{label} ({target})"
+
+    return LINK_RE.sub(_repl, text)
+
+
+def load_agent_index(agent_dir: Path) -> dict[str, dict]:
+    sessions_index = agent_dir / "sessions" / "sessions.json"
+    if not sessions_index.exists():
+        return {}
+    try:
+        data = json.loads(sessions_index.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    out = {}
+    if not isinstance(data, dict):
+        return out
+    for session_key, value in data.items():
+        if not isinstance(value, dict):
+            continue
+        session_id = value.get("sessionId")
+        if not isinstance(session_id, str) or not session_id:
+            continue
+        origin = value.get("origin") if isinstance(value.get("origin"), dict) else {}
+        delivery = value.get("deliveryContext") if isinstance(value.get("deliveryContext"), dict) else {}
+        out[session_id] = {
+            "session_key": session_key,
+            "origin_label": origin.get("label", ""),
+            "chat_type": value.get("chatType") or origin.get("chatType", ""),
+            "channel": value.get("lastChannel") or delivery.get("channel", ""),
+            "account_id": origin.get("accountId") or delivery.get("accountId", ""),
+            "from_target": origin.get("from", ""),
+            "to_target": origin.get("to", ""),
+        }
+    return out
+
+
+def parse_session(path: Path, meta: dict[str, dict]):
+    messages = []
+    session_id = path.stem
+    session_ts = ""
+
+    with path.open("r", encoding="utf-8", errors="replace") as f:
+        for raw in f:
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                row = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+
+            if row.get("type") == "session":
+                sid = row.get("id")
+                if isinstance(sid, str) and sid:
+                    session_id = sid
+                sts = row.get("timestamp")
+                if isinstance(sts, str):
+                    session_ts = sts
+                continue
+
+            if row.get("type") != "message":
+                continue
+            payload = row.get("message")
+            if not isinstance(payload, dict):
+                continue
+            role = payload.get("role")
+            if role not in ("user", "assistant"):
+                continue
+            text = strip_metadata_blocks(extract_text(payload.get("content")))
+            if not text:
+                continue
+            messages.append(Msg(role=role, text=text, ts=row.get("timestamp", "")))
+
+    return session_id, session_ts, meta.get(session_id, {}), messages
+
+
+def pick_topic(messages) -> str:
+    for msg in messages:
+        if msg.role != "user":
+            continue
+        text = cleanup_text(msg.text)
+        if is_noise_question(text):
+            continue
+        return text[:90]
+    return "conversation"
+
+
+def pick_date_str(session_ts: str, fallback_ts: int) -> str:
+    if session_ts:
+        try:
+            dt = datetime.fromisoformat(session_ts.replace("Z", "+00:00"))
+            return dt.date().isoformat()
+        except Exception:
+            pass
+    return datetime.fromtimestamp(fallback_ts, tz=timezone.utc).date().isoformat()
+
+
+def build_output_rel(agent_id: str, session_id: str, session_ts: str, stat_mtime_ns: int, messages) -> Path:
+    topic = pick_topic(messages)
+    slug = slugify(topic)
+    date_str = pick_date_str(session_ts, stat_mtime_ns / 1_000_000_000)
+    return Path(date_str[:4]) / date_str[5:7] / date_str[8:10] / f"{date_str}--{agent_id}--{slug}--{session_id}.md"
+
+
+def build_output_rels(base: Path, part_count: int) -> list[Path]:
+    if part_count <= 1:
+        return [base]
+    stem = base.stem
+    return [base.with_name(f"{stem}--part-{idx:02d}.md") for idx in range(1, part_count + 1)]
+
+
+def build_turns(messages):
+    turns = []
+    current = None
+    for msg in messages:
+        if msg.role == "user":
+            if current is not None:
+                turns.append(current)
+            current = {"q": msg.text, "q_ts": msg.ts, "a": [], "a_ts": []}
+            continue
+        if msg.role == "assistant" and current is not None:
+            current["a"].append(msg.text)
+            current["a_ts"].append(msg.ts)
+
+    if current is not None:
+        turns.append(current)
+
+    filtered = []
+    for turn in turns:
+        q_clean = cleanup_text(turn.get("q", ""))
+        has_answer = bool("".join(turn.get("a", [])).strip())
+        if is_noise_question(q_clean) and not has_answer:
+            continue
+        filtered.append(turn)
+    return filtered
+
+
+def turn_size(turn) -> int:
+    return len(turn.get("q", "")) + sum(len(item) for item in turn.get("a", []))
+
+
+def split_text_blocks(text: str, max_chars: int) -> list[str]:
+    text = text.strip()
+    if not text:
+        return [""]
+    chunks = []
+    current = ""
+    blocks = re.split(r"\n{2,}", text)
+    for block in blocks:
+        if current:
+            candidate = f"{current}\n\n{block}"
+            if len(candidate) <= max_chars:
+                current = candidate
+                continue
+            chunks.append(current)
+            current = ""
+        if len(block) <= max_chars:
+            current = block
+            continue
+        start = 0
+        while start < len(block):
+            chunks.append(block[start:start + max_chars])
+            start += max_chars
+    if current:
+        chunks.append(current)
+    return chunks or [""]
+
+
+def expand_large_turns(turns, max_chars: int) -> list[dict]:
+    expanded = []
+    for turn in turns:
+        if turn_size(turn) <= max_chars:
+            expanded.append(turn)
+            continue
+        answer_text = "\n\n---\n\n".join(turn.get("a", [])).strip()
+        answer_limit = max(12000, max_chars - min(len(turn.get("q", "")), max_chars // 2))
+        answer_chunks = split_text_blocks(answer_text, answer_limit)
+        for index, chunk in enumerate(answer_chunks):
+            if index == 0:
+                expanded.append({
+                    "q": turn.get("q", ""),
+                    "q_ts": turn.get("q_ts", ""),
+                    "a": [chunk] if chunk else [],
+                    "a_ts": turn.get("a_ts", []),
+                })
+            else:
+                expanded.append({
+                    "q": "Continuation of previous answer.",
+                    "q_ts": "",
+                    "a": [chunk] if chunk else [],
+                    "a_ts": turn.get("a_ts", []),
+                })
+    return expanded
+
+
+def split_turns(turns, max_chars: int) -> list[list[dict]]:
+    if not turns:
+        return [[]]
+    parts = []
+    current = []
+    current_size = 0
+    for turn in turns:
+        size = turn_size(turn)
+        if current and current_size + size > max_chars:
+            parts.append(current)
+            current = []
+            current_size = 0
+        current.append(turn)
+        current_size += size
+    if current:
+        parts.append(current)
+    return parts or [[]]
+
+
+def build_markdown(
+    agent_id: str,
+    session_id: str,
+    session_ts: str,
+    session_meta: dict,
+    src: Path,
+    out_rel: Path,
+    messages,
+    turns,
+    part_index: int = 1,
+    part_count: int = 1,
+):
+    topic = pick_topic(messages)
+    if part_count > 1:
+        title = f"{topic} - OpenClaw Conversation - Part {part_index}/{part_count}"
+    else:
+        title = f"{topic} - OpenClaw Conversation"
+
+    lines = [f"# {title}", ""]
+    lines.append("> [!info] Session")
+    lines.append(f"- Agent: `{agent_id}`")
+    lines.append(f"- Session ID: `{session_id}`")
+    if session_meta.get("session_key"):
+        lines.append(f"- Session key: `{session_meta['session_key']}`")
+    if session_ts:
+        lines.append(f"- Started: `{session_ts}`")
+    if session_meta.get("channel"):
+        lines.append(f"- Channel: `{session_meta['channel']}`")
+    if session_meta.get("chat_type"):
+        lines.append(f"- Chat type: `{session_meta['chat_type']}`")
+    if session_meta.get("account_id"):
+        lines.append(f"- Account: `{session_meta['account_id']}`")
+    if session_meta.get("origin_label"):
+        lines.append(f"- Origin: `{session_meta['origin_label']}`")
+    if session_meta.get("from_target"):
+        lines.append(f"- From: `{session_meta['from_target']}`")
+    if session_meta.get("to_target"):
+        lines.append(f"- To: `{session_meta['to_target']}`")
+    lines.append(f"- Source: `{src}`")
+    lines.append(f"- File: `{out_rel}`")
+    lines.append(f"- Exported: `{datetime.now(timezone.utc).isoformat()}`")
+    if part_count > 1:
+        lines.append(f"- Part: `{part_index}/{part_count}`")
+    lines.append("")
+
+    if part_count > 1:
+        lines.append("## Parts")
+        lines.append("")
+        part_name = out_rel.with_suffix("").as_posix()
+        for idx in range(1, part_count + 1):
+            target = re.sub(r"--part-\d+$", f"--part-{idx:02d}", part_name)
+            if idx == part_index:
+                lines.append(f"- Part {idx}: current")
+            else:
+                lines.append(f"- [[{target}|Part {idx}]]")
+        lines.append("")
+
+    lines.append("## Navigation")
+    lines.append("")
+    note_name = out_rel.with_suffix("").as_posix()
+    for idx, _ in enumerate(turns, start=1):
+        n = f"{idx:03d}"
+        lines.append(f"- [[{note_name}#Q{n}|Q{n}]] -> [[{note_name}#A{n}|A{n}]]")
+    if not turns:
+        lines.append("- No user/assistant messages parsed yet.")
+    lines.append("")
+
+    for idx, turn in enumerate(turns, start=1):
+        n = f"{idx:03d}"
+        question = sanitize_links(turn["q"])
+        answer = sanitize_links("\n\n---\n\n".join(turn["a"]).strip())
+        if not answer:
+            answer = "_No assistant reply captured for this question._"
+        lines.append(f"## Q{n}")
+        lines.append("")
+        if turn.get("q_ts"):
+            lines.append(f"**My request ({turn['q_ts']}):**")
+        else:
+            lines.append("**My request:**")
+        lines.append("")
+        lines.append(question)
+        lines.append("")
+        lines.append(f"## A{n}")
+        lines.append("")
+        if turn.get("a_ts"):
+            lines.append(f"**OpenClaw answer ({turn['a_ts'][-1]}):**")
+        else:
+            lines.append("**OpenClaw answer:**")
+        lines.append("")
+        lines.append(answer)
+        lines.append("")
+        lines.append(f"Back: [[{note_name}#Navigation|Navigation]]")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def load_state():
+    if not STATE_FILE.exists():
+        return {}
+    try:
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def save_state(state):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def write_if_changed(path: Path, content: str) -> bool:
+    if path.exists():
+        try:
+            if path.read_text(encoding="utf-8") == content:
+                return False
+        except Exception:
+            pass
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return True
+
+
+def write_index():
+    lines = ["# OpenClaw Conversations Index", ""]
+    entries = []
+    for md in sorted(OUT_ROOT.rglob("*.md")):
+        if md.name == "index.md":
+            continue
+        rel = md.relative_to(OUT_ROOT)
+        wiki = rel.with_suffix("").as_posix()
+        ts = datetime.fromtimestamp(md.stat().st_mtime, tz=timezone.utc).isoformat()
+        entries.append((rel.as_posix(), wiki, ts, md.stem))
+    if not entries:
+        lines.append("- No conversation files yet.")
+    else:
+        for rel_path, wiki, ts, title in entries:
+            lines.append(f"- [[{wiki}|{title}]]  `{ts}`")
+            lines.append(f"  - `{rel_path}`")
+    lines.append("")
+    return write_if_changed(OUT_ROOT / "index.md", "\n".join(lines))
+
+
+def git_head() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(VAULT_ROOT), "rev-parse", "--short", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except Exception:
+        return "n/a"
+    return result.stdout.strip() or "n/a"
+
+
+def print_summary(scanned: int, written: int, removed: int, index_changed: bool):
+    total_notes = sum(1 for md in OUT_ROOT.rglob("*.md") if md.name != "index.md")
+    summary = [
+        f"sessions_scanned={scanned}",
+        f"notes_written={written}",
+        f"notes_removed={removed}",
+        f"index_changed={'yes' if index_changed else 'no'}",
+        f"total_notes={total_notes}",
+        f"vault_head={git_head()}",
+    ]
+    print("openclaw-obsidian-sync:", " ".join(summary))
+
+
+def main():
+    OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    old_state = load_state()
+    new_state = {}
+    scanned = 0
+    written = 0
+    removed = 0
+
+    if not AGENTS_ROOT.exists():
+        save_state(new_state)
+        print_summary(scanned, written, removed, False)
+        return
+
+    agent_meta = {}
+    for agent_dir in AGENTS_ROOT.iterdir():
+        if agent_dir.is_dir():
+            agent_meta[agent_dir.name] = load_agent_index(agent_dir)
+
+    for src in sorted(AGENTS_ROOT.glob("*/sessions/*.jsonl")):
+        try:
+            stat = src.stat()
+        except FileNotFoundError:
+            continue
+        scanned += 1
+        agent_id = src.parts[-3]
+        key = str(src)
+        mtime = stat.st_mtime_ns
+        sid, sts, session_meta, msgs = parse_session(src, agent_meta.get(agent_id, {}))
+        turns = expand_large_turns(build_turns(msgs), MAX_CHARS_PER_PART)
+        turn_parts = split_turns(turns, MAX_CHARS_PER_PART)
+        base_out_rel = build_output_rel(agent_id, sid, sts, mtime, msgs)
+        out_rels = build_output_rels(base_out_rel, len(turn_parts))
+
+        prev = old_state.get(key, {})
+        if isinstance(prev, int):
+            prev = {"mtime_ns": prev, "files": []}
+        if (
+            prev.get("mtime_ns") == mtime
+            and prev.get("format_version") == EXPORT_FORMAT_VERSION
+            and len(prev.get("files", [])) == len(out_rels)
+        ):
+            new_state[key] = prev
+            continue
+
+        abs_paths = []
+        for idx, (out_rel, turn_chunk) in enumerate(zip(out_rels, turn_parts), start=1):
+            abs_path = OUT_ROOT / out_rel
+            content = build_markdown(
+                agent_id=agent_id,
+                session_id=sid,
+                session_ts=sts,
+                session_meta=session_meta,
+                src=src,
+                out_rel=out_rel,
+                messages=msgs,
+                turns=turn_chunk,
+                part_index=idx,
+                part_count=len(turn_parts),
+            )
+            if write_if_changed(abs_path, content):
+                written += 1
+            abs_paths.append(str(abs_path))
+
+        for obsolete in prev.get("files", []):
+            if obsolete not in abs_paths:
+                stale = Path(obsolete)
+                if stale.exists():
+                    stale.unlink()
+                    removed += 1
+
+        new_state[key] = {
+            "mtime_ns": mtime,
+            "files": abs_paths,
+            "format_version": EXPORT_FORMAT_VERSION,
+        }
+
+    for key, prev in old_state.items():
+        if key in new_state:
+            continue
+        for obsolete in prev.get("files", []) if isinstance(prev, dict) else []:
+            stale = Path(obsolete)
+            if stale.exists():
+                stale.unlink()
+                removed += 1
+
+    index_changed = write_index()
+    save_state(new_state)
+    print_summary(scanned, written, removed, index_changed)
+
+
+if __name__ == "__main__":
+    main()

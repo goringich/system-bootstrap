@@ -56,7 +56,7 @@ tooltip {
 }
 
 #workspaces {
-    padding: 5px 1px;
+    padding: 4px 2px;
     border-radius: 12px;
     border: 1px solid @cyber-ring;
     font-weight: bold;
@@ -70,23 +70,57 @@ tooltip {
     color: @wb_text_dim;
     box-shadow: none;
 	text-shadow: none;
-    border-radius: 30px;
-    padding-left: 4px;
-    padding-right: 4px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding-left: 8px;
+    padding-right: 8px;
+    min-width: 26px;
+    margin-left: 2px;
+    margin-right: 2px;
     animation: gradient_f 20s ease-in infinite;
     transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
+}
+
+#workspaces button label {
+    font-size: 12px;
+    font-weight: 800;
+    margin-right: 0;
+}
+
+#workspaces button image {
+    margin-left: 2px;
+    margin-right: 2px;
 }
 
 #taskbar button.active,
 #workspaces button.active {
     color: @wb_accent_fg;
     background-color: @wb_accent;
-    border-radius: 12px;
-    padding-left: 8px;
-    padding-right: 8px;
+    border-color: alpha(@wb_accent_fg, 0.22);
     box-shadow: 0 0 10px @cyber-glow;
     animation: gradient_f 14s ease-in infinite;
     transition: all 0.2s ease;
+}
+
+#workspaces button.visible {
+    color: @wb_text;
+    background-color: alpha(@wb_surface_strong, 0.95);
+    border-color: alpha(@wb_ring, 0.7);
+}
+
+#workspaces button.empty {
+    color: alpha(@wb_text_dim, 0.7);
+    background-color: transparent;
+    border-color: transparent;
+}
+
+#workspaces button.persistent {
+    color: @wb_text;
+}
+
+#workspaces button label:first-child {
+    min-width: 16px;
+    margin-right: 8px;
 }
 
 #workspaces button.focused {
@@ -97,14 +131,14 @@ tooltip {
     color: @wb_accent_fg;
     background-color: @wb_accent_alt;
     border-radius: 10px;
+    border-color: alpha(@wb_accent_fg, 0.22);
 }
 
 #taskbar button:hover,
 #workspaces button:hover {
     color: @wb_accent;
-    border-radius: 8px;
- 	padding-left: 2px;
-    padding-right: 2px;
+    background-color: alpha(@wb_surface_strong, 0.95);
+    border-color: alpha(@wb_accent, 0.35);
     animation: gradient_f 14s ease-in infinite;
     transition: all 0.2s ease;
 }
@@ -117,6 +151,7 @@ tooltip {
 #cpu,
 #disk,
 #idle_inhibitor,
+#language,
 #keyboard-state,
 #memory,
 #mode,
@@ -143,6 +178,7 @@ tooltip {
 #custom-light_dark,
 #custom-nightlight,
 #custom-lock,
+#custom-ai_usage,
 #custom-hint,
 #custom-hypridle,
 #custom-menu,
@@ -157,6 +193,7 @@ tooltip {
 #custom-tty,
 #custom-updater,
 #custom-hyprpicker,
+#custom-overview,
 #custom-weather,
 #custom-weather.clearNight,
 #custom-weather.cloudyFoggyDay,
@@ -191,6 +228,26 @@ tooltip {
 #custom-gpu-status.offline,
 #custom-gpu_status.offline {
     color: #8a8f9e;
+}
+
+#custom-ai_usage {
+    color: @wb_accent_alt;
+}
+
+#custom-overview {
+    color: @wb_accent;
+}
+
+#custom-ai_usage.warning {
+    color: #f8d66d;
+}
+
+#custom-ai_usage.critical {
+    color: #ff7a7a;
+}
+
+#custom-ai_usage.unknown {
+    color: @wb_text_dim;
 }
 
 #temperature.critical {
@@ -274,10 +331,14 @@ tooltip {
 }
 
 /*-----Indicators----*/
-#custom-hypridle.notactive,
+#custom-hypridle.active,
 #idle_inhibitor.activated {
 	color: #39FF14;
     border-bottom: 8px solid rgba(0, 0, 0, 0.2);
+}
+
+#custom-hypridle.inactive {
+    color: @wb_text_dim;
 }
 
 

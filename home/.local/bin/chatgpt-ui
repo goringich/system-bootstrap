@@ -1,7 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-exec /home/goringich/.local/bin/google-chrome-stable \
-  --app=https://chatgpt.com \
-  --class=chatgpt-ui \
-  --name="ChatGPT" \
+PROFILE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/google-chrome-chatgpt-ui"
+
+exec /home/goringich/.local/bin/chrome-site-app \
+  "ChatGPT" \
+  "chatgpt-ui" \
+  "https://chatgpt.com/" \
+  "$PROFILE_DIR" \
   "$@"

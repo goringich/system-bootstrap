@@ -1,0 +1,21 @@
+[Unit]
+Description=Waybar status bar
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sh -lc 'for i in $(seq 1 40); do [ -n "$WAYLAND_DISPLAY" ] && [ -n "$XDG_RUNTIME_DIR" ] && exit 0; sleep 0.25; done; exit 1'
+ExecStart=/bin/bash -lc 'exec %h/.config/hypr/scripts/WaybarEnsure.sh run'
+ExecReload=/bin/kill -SIGUSR2 $MAINPID
+Restart=always
+RestartSec=2
+TimeoutStopSec=5
+Environment=XDG_CURRENT_DESKTOP=Hyprland
+EnvironmentFile=-%h/.config/hypr/session.env
+StandardOutput=append:/tmp/waybar-session.out
+StandardError=append:/tmp/waybar-session.err
+
+
+[Install]
+WantedBy=default.target

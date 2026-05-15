@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Claude
+Comment=Open Claude in a browser-style window
+Exec=/home/goringich/.local/bin/claude-ui
+Icon=google-chrome
+Terminal=false
+Categories=Network;WebBrowser;
+StartupNotify=true
+StartupWMClass=claude-ui

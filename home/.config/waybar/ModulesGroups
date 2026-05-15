@@ -92,6 +92,7 @@
 	"modules": [
 		"custom/power",
 		"custom/lock",
+		"custom/hypridle",
 		"keyboard-state",
 		"custom/keyboard",
 	]

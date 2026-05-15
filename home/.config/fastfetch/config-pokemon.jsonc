@@ -70,7 +70,8 @@
         {
             "type": "gpu",
             "key": "󰢮 ",
-            "keyColor": "cyan"
+            "keyColor": "cyan",
+            "format": "{2} [{3}]"
         },
         {
             "type": "memory",
@@ -80,15 +81,15 @@
             "format": "{1} / {2}"
         },
         {
-            "type": "swap",
-            "key": "󰾴 ",
-            "keyColor": "yellow",
-            "format": "{1} / {2}"
-        },
-        {
             "type": "disk",
             "key": "󰋊 ",
             "keyColor": "cyan"
+        },
+        {
+            "type": "display",
+            "key": "󰍹 ",
+            "keyColor": "yellow",
+            "compactType": "original-with-refresh-rate"
         },
         {
             "type": "localip",
@@ -101,10 +102,10 @@
             "keyColor": "green"
         },
         {
-            "type": "command",
-            "key": "󱦟 ",
+            "type": "sound",
+            "key": "󰓃 ",
             "keyColor": "magenta",
-            "text": "echo $(( ($(date +%s) - $(stat -c %W /)) / 86400 )) days"
+            "format": "{2}"
         },
         {
             "type": "custom",

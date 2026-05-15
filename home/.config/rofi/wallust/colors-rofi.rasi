@@ -2,48 +2,48 @@
  /* wallust template - colors-rofi */
 
 * {
-active-background: #526D74;
-active-foreground: #E4C9AA;
-normal-background: #121212;
-normal-foreground: #E4C9AA;
-urgent-background: #8C5C48;
-urgent-foreground: #E4C9AA;
+active-background: #3387D2;
+active-foreground: #BBECF9;
+normal-background: #161818;
+normal-foreground: #BBECF9;
+urgent-background: #1A93D9;
+urgent-foreground: #BBECF9;
 
-alternate-active-background: #526D74;
-alternate-active-foreground: #E4C9AA;
-alternate-normal-background: #121212;
-alternate-normal-foreground: #E4C9AA;
-alternate-urgent-background: #121212;
-alternate-urgent-foreground: #E4C9AA;
+alternate-active-background: #3387D2;
+alternate-active-foreground: #BBECF9;
+alternate-normal-background: #161818;
+alternate-normal-foreground: #BBECF9;
+alternate-urgent-background: #161818;
+alternate-urgent-foreground: #BBECF9;
 
-selected-active-background: #526D74;
+selected-active-background: #3387D2;
 selected-active-foreground: #F5F5F5;
-selected-normal-background: #526D74;
+selected-normal-background: #3387D2;
 selected-normal-foreground: #F5F5F5;
-selected-urgent-background: #526D74;
+selected-urgent-background: #3387D2;
 selected-urgent-foreground: #F5F5F5;
 
-background-color: #121212;
-background: rgba(18,18,18,0.82);
-foreground: #E4C9AA;
-border-color: #526D74;
+background-color: #161818;
+background: rgba(22,24,24,0.82);
+foreground: #BBECF9;
+border-color: #3387D2;
 
-color0: #3C3C3C;
-color1: #464645;
-color2: #4C6065;
-color3: #4C6065;
-color4: #4C6065;
-color5: #775345;
-color6: #A17440;
-color7: #D0A97D;
-color8: #927657;
-color9: #4A4A49;
-color10: #526D74;
-color11: #526D74;
-color12: #526D74;
-color13: #8C5C48;
-color14: #B66C17;
-color15: #D0A97D;
+color0: #404243;
+color1: #444B4D;
+color2: #444B4D;
+color3: #3C78AE;
+color4: #3C78AE;
+color5: #3F89B4;
+color6: #2E96B2;
+color7: #96DBEE;
+color8: #6999A6;
+color9: #485053;
+color10: #485053;
+color11: #3387D2;
+color12: #3387D2;
+color13: #1A93D9;
+color14: #3EC8ED;
+color15: #96DBEE;
 
 
 }

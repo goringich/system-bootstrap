@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ChatGPT
+Comment=Open ChatGPT in a browser-style window
+Exec=/home/goringich/.local/bin/chatgpt-ui
+Icon=google-chrome
+Terminal=false
+Categories=Network;WebBrowser;
+StartupNotify=true
+StartupWMClass=chatgpt-ui

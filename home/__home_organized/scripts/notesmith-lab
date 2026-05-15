@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LAB_ROOT="/home/goringich/__home_organized/artifacts/obsidian-notesmith-lab"
+APP_ROOT="$LAB_ROOT/tools/notesmith"
+VENV_BIN="$APP_ROOT/.venv/bin"
+
+if [[ ! -x "$VENV_BIN/notesmith" ]]; then
+  printf 'notesmith-lab: expected executable not found at %s\n' "$VENV_BIN/notesmith" >&2
+  exit 1
+fi
+
+exec "$VENV_BIN/notesmith" "$@"

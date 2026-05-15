@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec /usr/bin/Telegram "$@"
+exec "$HOME/.local/bin/Telegram" "$@"

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=/home/goringich/.local/bin/google-chrome-stable
+MimeType=image/jpeg;
+Name=google-chrome-stable
+NoDisplay=true
+Type=Application

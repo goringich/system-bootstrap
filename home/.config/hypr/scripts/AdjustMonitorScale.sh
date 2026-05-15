@@ -5,9 +5,11 @@ set -euo pipefail
 ACTION="${1:-}"
 MONITORS_CONF="${HOME}/.config/hypr/monitors.conf"
 LOG_DIR="${HOME}/__home_organized/logs"
+RUNTIME_DIR="${HOME}/__home_organized/runtime/hypr-scaling"
+STATE_FILE="${RUNTIME_DIR}/current.env"
 LOG_FILE="${LOG_DIR}/hypr-monitor-scale.log"
 
-mkdir -p "${LOG_DIR}"
+mkdir -p "${LOG_DIR}" "${RUNTIME_DIR}"
 
 log() {
   printf '%s %s\n' "$(date '+%F %T')" "$*" >>"${LOG_FILE}"
@@ -40,12 +42,22 @@ width="$(jq -r '.width' <<<"${monitor_json}")"
 height="$(jq -r '.height' <<<"${monitor_json}")"
 x_pos="$(jq -r '.x' <<<"${monitor_json}")"
 y_pos="$(jq -r '.y' <<<"${monitor_json}")"
-scale="$(jq -r '.scale' <<<"${monitor_json}")"
+monitor_scale="$(jq -r '.scale' <<<"${monitor_json}")"
 refresh="$(jq -r '(.refreshRate // .refresh // 60)' <<<"${monitor_json}")"
 
 # This monitor/compositor pair quantizes scale aggressively. Keep only the
 # clearly distinct plateaus so each hotkey press produces a visible change.
-declare -a SCALE_STEPS=("1.00" "1.25" "1.33" "1.60" "1.78" "2.00")
+declare -a SCALE_STEPS=("0.80" "0.85" "0.90" "0.95" "1.00" "1.25" "1.33" "1.60" "1.78" "2.00")
+
+scale="${monitor_scale}"
+if [[ -f "${STATE_FILE}" ]]; then
+  # For sub-1.0 pseudo scaling, the monitor stays at 1.00 while app scale
+  # carries the smaller effective value. Reuse that logical value for stepping.
+  source "${STATE_FILE}"
+  if [[ "${HYPR_SCALE_MODE:-}" == "pseudo" && -n "${HYPR_APP_SCALE:-}" ]]; then
+    scale="${HYPR_APP_SCALE}"
+  fi
+fi
 
 nearest_index=0
 nearest_diff="$(awk -v current="${scale}" -v candidate="${SCALE_STEPS[0]}" 'BEGIN { d = current - candidate; if (d < 0) d = -d; printf "%.6f", d }')"
@@ -84,25 +96,37 @@ esac
 refresh_fmt="$(awk -v value="${refresh}" 'BEGIN { printf "%.2f", value }')"
 mode="${width}x${height}@${refresh_fmt}"
 position="${x_pos}x${y_pos}"
+monitor_target="${new_scale}"
+app_target="${new_scale}"
 
-hyprctl keyword monitor "${name},${mode},${position},${new_scale}" >/dev/null
+if awk -v value="${new_scale}" 'BEGIN { exit !(value < 1.0) }'; then
+  monitor_target="1.00"
+fi
 
-get_applied_scale() {
+hyprctl keyword monitor "${name},${mode},${position},${monitor_target}" >/dev/null
+
+get_applied_monitor_scale() {
   hyprctl monitors -j | jq -r --arg name "${name}" '.[] | select(.name == $name) | .scale' | awk 'NR==1 { printf "%.2f", $1 }'
 }
 
-applied_scale="${scale}"
+applied_monitor_scale="${monitor_scale}"
 for _ in 1 2 3 4 5 6 7 8 9 10; do
   sleep 0.15
-  applied_scale="$(get_applied_scale)"
-  if [[ "${applied_scale}" == "${new_scale}" ]]; then
+  applied_monitor_scale="$(get_applied_monitor_scale)"
+  if [[ "${applied_monitor_scale}" == "${monitor_target}" ]]; then
     break
   fi
 done
 
+applied_scale="${new_scale}"
+scale_mode="monitor"
+if [[ "${monitor_target}" != "${new_scale}" ]]; then
+  scale_mode="pseudo"
+fi
+
 if [[ -f "${MONITORS_CONF}" ]]; then
   tmp_file="$(mktemp)"
-  awk -F',' -v OFS=',' -v target_name="${name}" -v target_scale="${applied_scale}" '
+  awk -F',' -v OFS=',' -v target_name="${name}" -v target_scale="${applied_monitor_scale}" '
     BEGIN {
       updated = 0
     }
@@ -126,12 +150,12 @@ if [[ -f "${MONITORS_CONF}" ]]; then
 fi
 
 if [[ -x "${HOME}/.config/hypr/scripts/SyncAppScaling.sh" ]]; then
-  if ! "${HOME}/.config/hypr/scripts/SyncAppScaling.sh" "${applied_scale}" >/dev/null 2>&1; then
+  if ! "${HOME}/.config/hypr/scripts/SyncAppScaling.sh" "${applied_scale}" "${applied_monitor_scale}" "${scale_mode}" >/dev/null 2>&1; then
     log "warning=sync-app-scaling-failed applied=${applied_scale}"
   fi
 fi
 
-log "action=${ACTION} monitor=${name} before=${scale} nearest=${SCALE_STEPS[$nearest_index]} target=${new_scale} applied=${applied_scale} mode=${mode} position=${position}"
+log "action=${ACTION} monitor=${name} before=${scale} nearest=${SCALE_STEPS[$nearest_index]} target=${new_scale} monitor_target=${monitor_target} applied_monitor=${applied_monitor_scale} applied=${applied_scale} scale_mode=${scale_mode} mode=${mode} position=${position}"
 
 if command -v notify-send >/dev/null 2>&1; then
   notify-send \

@@ -1,0 +1,277 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config="${HOME}/.config/rofi/config-appscope-launcher.rasi"
+vault_name="Obsidian"
+vault_dir="${HOME}/Desktop/Obsidian"
+reading_dir_rel="Чтение"
+
+if pgrep -x rofi >/dev/null 2>&1; then
+  pkill rofi
+  exit 0
+fi
+
+notify() {
+  notify-send "Reading Hub" "$1"
+}
+
+uri_encode() {
+  python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+sanitize_title() {
+  local title="$1"
+  title="${title//$'\n'/ }"
+  title="${title//\//-}"
+  title="${title//:/ -}"
+  title="$(trim "$title")"
+  printf '%s' "$title"
+}
+
+open_obsidian_vault() {
+  nohup "${HOME}/.local/bin/obsidian" "$vault_dir" >/dev/null 2>&1 &
+}
+
+open_obsidian_file() {
+  local rel_path="$1"
+  local vault_encoded file_encoded
+  vault_encoded="$(uri_encode "$vault_name")"
+  file_encoded="$(uri_encode "$rel_path")"
+  nohup "${HOME}/.local/bin/obsidian" "obsidian://open?vault=${vault_encoded}&file=${file_encoded}" >/dev/null 2>&1 &
+}
+
+open_path() {
+  local target="$1"
+  nohup xdg-open "$target" >/dev/null 2>&1 &
+}
+
+new_note_prompt() {
+  local label="$1"
+  rofi -dmenu -i -p "$label" -mesg "Введите имя заметки" -config "$config"
+}
+
+write_note_file() {
+  local target="$1"
+  local content="$2"
+
+  mkdir -p "$(dirname "$target")"
+  if [[ -e "$target" ]]; then
+    notify "Файл уже существует: $(basename "$target")"
+    return 1
+  fi
+
+  printf '%s\n' "$content" >"$target"
+}
+
+create_inbox_note() {
+  local title note_rel note_abs now content
+  title="$(sanitize_title "$(new_note_prompt "Inbox capture")")"
+  [[ -z "$title" ]] && exit 0
+  note_rel="${reading_dir_rel}/00_inbox/${title}.md"
+  note_abs="${vault_dir}/${note_rel}"
+  now="$(date '+%Y-%m-%d %H:%M')"
+  content="---
+created: ${now}
+type: inbox-capture
+status: inbox
+tags:
+  - reading/inbox
+---
+# ${title}
+
+## Raw capture
+
+-
+
+## Context
+
+- Source:
+- Why it caught attention:
+
+## Next step
+
+- [ ] Move into a source note
+- [ ] Turn into an atomic note
+- [ ] Link to a MOC"
+  write_note_file "$note_abs" "$content" || exit 0
+  open_obsidian_file "$note_rel"
+}
+
+create_source_note() {
+  local title note_rel note_abs now content
+  title="$(sanitize_title "$(new_note_prompt "Source note")")"
+  [[ -z "$title" ]] && exit 0
+  note_rel="${reading_dir_rel}/01_sources/books/${title}.md"
+  note_abs="${vault_dir}/${note_rel}"
+  now="$(date '+%Y-%m-%d %H:%M')"
+  content="---
+created: ${now}
+type: source-book
+status: unread
+author:
+tags:
+  - reading/source
+---
+# ${title}
+
+## Bibliography
+
+- Author:
+- Format:
+- Topic:
+
+## Reading goal
+
+-
+
+## Highlights
+
+> 
+
+Comment:
+
+## Candidate atomic notes
+
+- 
+
+## Links
+
+- [[Чтение/03_maps/Reading MOC|Reading MOC]]"
+  write_note_file "$note_abs" "$content" || exit 0
+  open_obsidian_file "$note_rel"
+}
+
+create_atomic_note() {
+  local title note_rel note_abs now content
+  title="$(sanitize_title "$(new_note_prompt "Atomic note")")"
+  [[ -z "$title" ]] && exit 0
+  note_rel="${reading_dir_rel}/02_notes/atomic/${title}.md"
+  note_abs="${vault_dir}/${note_rel}"
+  now="$(date '+%Y-%m-%d %H:%M')"
+  content="---
+created: ${now}
+type: atomic-note
+status: seed
+tags:
+  - reading/atomic
+---
+# ${title}
+
+## Idea
+
+-
+
+## Why it matters
+
+-
+
+## Example
+
+-
+
+## Links
+
+- [[Чтение/03_maps/Reading MOC|Reading MOC]]"
+  write_note_file "$note_abs" "$content" || exit 0
+  open_obsidian_file "$note_rel"
+}
+
+create_moc_note() {
+  local title note_rel note_abs now content
+  title="$(sanitize_title "$(new_note_prompt "MOC")")"
+  [[ -z "$title" ]] && exit 0
+  note_rel="${reading_dir_rel}/03_maps/${title}.md"
+  note_abs="${vault_dir}/${note_rel}"
+  now="$(date '+%Y-%m-%d %H:%M')"
+  content="---
+created: ${now}
+type: moc
+tags:
+  - reading/moc
+---
+# ${title}
+
+## Concepts
+
+- 
+
+## Source notes
+
+- 
+
+## Atomic notes
+
+- 
+
+## Project links
+
+- "
+  write_note_file "$note_abs" "$content" || exit 0
+  open_obsidian_file "$note_rel"
+}
+
+run_zotero() {
+  if command -v zotero >/dev/null 2>&1; then
+    nohup zotero >/dev/null 2>&1 &
+    exit 0
+  fi
+
+  notify "Zotero не установлен. Сейчас система работает без него."
+}
+
+selection="$(
+  {
+    printf "󰈔  Open Reading Hub\n"
+    printf "󱞁  New Inbox Capture\n"
+    printf "󰂺  New Source Note\n"
+    printf "󰎞  New Atomic Note\n"
+    printf "󰠮  New MOC\n"
+    printf "󰈙  Open Books Folder\n"
+    printf "󰋩  Open Atomic Notes Folder\n"
+    printf "󱗖  Open Reading Project Index\n"
+    printf "󰈆  Launch Obsidian Vault\n"
+    printf "󱓷  Launch Zotero\n"
+  } | rofi -dmenu -i -p "Reading Hub" -mesg "Sources -> atomic notes -> MOC -> projects" -config "$config"
+)"
+
+[[ -z "${selection:-}" ]] && exit 0
+
+case "$selection" in
+  "󰈔  Open Reading Hub")
+    open_obsidian_file "${reading_dir_rel}/Reading Hub.md"
+    ;;
+  "󱞁  New Inbox Capture")
+    create_inbox_note
+    ;;
+  "󰂺  New Source Note")
+    create_source_note
+    ;;
+  "󰎞  New Atomic Note")
+    create_atomic_note
+    ;;
+  "󰠮  New MOC")
+    create_moc_note
+    ;;
+  "󰈙  Open Books Folder")
+    open_path "${vault_dir}/${reading_dir_rel}/01_sources/books"
+    ;;
+  "󰋩  Open Atomic Notes Folder")
+    open_path "${vault_dir}/${reading_dir_rel}/02_notes/atomic"
+    ;;
+  "󱗖  Open Reading Project Index")
+    open_obsidian_file "${reading_dir_rel}/04_projects/Applied Reading.md"
+    ;;
+  "󰈆  Launch Obsidian Vault")
+    open_obsidian_vault
+    ;;
+  "󱓷  Launch Zotero")
+    run_zotero
+    ;;
+esac

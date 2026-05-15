@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script="$HOME/__home_organized/scripts/system-control-tui.py"
+
+if [[ ! -f "$script" ]]; then
+  echo "system-control-tui: missing script: $script" >&2
+  exit 1
+fi
+
+exec python3 "$script" "$@"

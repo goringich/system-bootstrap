@@ -92,8 +92,10 @@
 "custom/keyboard": {
 	"exec": "$HOME/.config/hypr/scripts/KeyboardLayout.sh status",
 	"interval": 1,
-	"format": " {}",
+	"format": "{}",
 	"on-click": "$HOME/.config/hypr/scripts/KeyboardLayout.sh switch",
+	"tooltip": true,
+	"tooltip-format": "Current keyboard layout",
 },
 
 "custom/light_dark": {

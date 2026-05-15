@@ -3,9 +3,11 @@
 	directory = /mnt/windows/Users/user/Desktop/Obsidian
 	directory = /mnt/windows/Users/user/Desktop/Obsidian
 	directory = /mnt/windows/Users/user/Desktop/Obsidian
+	directory = /home/goringich/system-bootstrap
+	directory = /home/goringich/system-bootstrap/.git
 [user]
 	email = actingsv@gmail.com
-	name = Igor
+	name = Kim Igor
 [core]
 	editor = nano
 [http]
@@ -13,3 +15,8 @@
 	sslVerify = false
 [http "https://gittest.radiogigabit.net"]
 	sslVerify = false
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

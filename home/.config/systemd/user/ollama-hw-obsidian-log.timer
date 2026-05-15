@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Ollama hardware sampler periodically
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=ollama-hw-obsidian-log.service
+
+[Install]
+WantedBy=timers.target

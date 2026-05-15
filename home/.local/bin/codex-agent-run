@@ -74,7 +74,7 @@ while IFS= read -r line; do
     add_dir) add_dirs+=("$value") ;;
     skip_git_repo_check) skip_git_repo_check="$value" ;;
   esac
-done < "$task_artifact_dir/header.txt"
+done < "$header_file"
 
 {
   cat "$MANAGER_PROMPT_FILE"

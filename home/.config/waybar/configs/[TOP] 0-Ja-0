@@ -22,11 +22,11 @@
 "margin-right": 8,
 
 "modules-left": [
-	"idle_inhibitor",
-	"custom/separator#blank",
 	"tray",
 	"custom/separator#blank",
 	"clock",
+	"custom/separator#blank",
+	"custom/keyboard",
 	"custom/separator#blank_2",
 	"hyprland/window",
 	],
@@ -34,6 +34,8 @@
 "modules-center": [
 	"group/app_drawer",
 	"custom/separator#dot-line",
+	"custom/overview",
+	"custom/separator#blank",
 	"hyprland/workspaces#rw",
 	"custom/separator#dot-line",
 	"group/notify",	
@@ -43,6 +45,7 @@
 	"group/laptop",
 	"custom/separator#blank",
 	"group/motherboard",
+	"custom/ai_usage",
 	"custom/separator#line",  
 	"group/connections",
 	"custom/separator#dot-line",

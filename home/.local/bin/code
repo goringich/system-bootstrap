@@ -1,2 +1,25 @@
 #!/usr/bin/env bash
-exec flatpak run com.visualstudio.code "$@"
+set -euo pipefail
+
+quarantine_file="${HOME}/.local/state/gpu-watchdog/quarantine.env"
+args=("$@")
+
+# Force VS Code through XWayland by default. Dragging files out of Electron apps
+# is still less reliable on native Wayland, while X11/Xdnd behaves correctly.
+if [[ "${CODE_FORCE_WAYLAND:-0}" != "1" ]]; then
+  export ELECTRON_ENABLE_WAYLAND=0
+  export ELECTRON_OZONE_PLATFORM_HINT=x11
+else
+  export ELECTRON_ENABLE_WAYLAND=1
+  export ELECTRON_OZONE_PLATFORM_HINT=auto
+fi
+
+if [[ -f "${quarantine_file}" ]]; then
+  # shellcheck disable=SC1090
+  source "${quarantine_file}"
+  if [[ "${GPU_QUARANTINE:-0}" == "1" ]]; then
+    args=(--disable-gpu "${args[@]}")
+  fi
+fi
+
+exec flatpak run com.visualstudio.code "${args[@]}"

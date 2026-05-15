@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+PROFILE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/google-chrome-claude-ui"
+
+exec /home/goringich/.local/bin/chrome-site-app \
+  "Claude" \
+  "claude-ui" \
+  "https://claude.ai/" \
+  "$PROFILE_DIR" \
+  "$@"

@@ -3,7 +3,7 @@ Description=Run Codex to Obsidian sync periodically
 
 [Timer]
 OnBootSec=20s
-OnUnitActiveSec=20s
+OnUnitActiveSec=2min
 Persistent=true
 Unit=codex-obsidian-sync.service
 

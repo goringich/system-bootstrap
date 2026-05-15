@@ -1,0 +1,6 @@
+[Unit]
+Description=Check system health and mirror incidents to Obsidian
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/.config/hypr/scripts/SystemWatchdog.sh

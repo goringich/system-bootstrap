@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# The Wayland backend is currently crashing on this host, but the same rofi
+# binary works correctly through Xwayland on DISPLAY=:1.
+display="${DISPLAY:-:1}"
+
+exec env WAYLAND_DISPLAY= DISPLAY="${display}" /usr/bin/rofi "$@"

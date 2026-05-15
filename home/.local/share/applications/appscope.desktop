@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Appscope Browser
+Comment=Browse desktop apps and CLI tools with icons and launch them
+Exec=/bin/sh -lc "$HOME/appscope.py"
+Terminal=true
+Icon=view-app-grid
+Categories=System;Utility;ConsoleOnly;

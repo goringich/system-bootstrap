@@ -17,9 +17,11 @@ command -v make >/dev/null 2>&1 || { echo "make is required" >&2; exit 1; }
 
 git clone --depth 1 "$repo_url" "$tmp_dir/mcp-gateway"
 cd "$tmp_dir/mcp-gateway"
-mkdir -p "$plugin_dir"
 make docker-mcp
-[[ -x "$plugin_path" ]] || install -m 755 ./dist/docker-mcp "$plugin_path"
+
+mkdir -p "$plugin_dir"
+install -m 755 ./dist/docker-mcp "$plugin_path"
+
 echo "Installed docker-mcp to $plugin_path"
 docker mcp --help >/dev/null
 echo "docker mcp is now available"

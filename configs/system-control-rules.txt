@@ -1,0 +1,34 @@
+# category|pattern|reason
+promote|.config/ags|Aylur shell layer should be either tracked or intentionally retired
+promote|.config/autostart|desktop startup intent should not stay implicit
+promote|.config/codex|Codex machine config needs explicit ownership and secret split
+promote|.config/niri|window manager experiments should be either tracked or removed from active surface
+promote|.config/quickshell|UI shell layer should be canonical or intentionally excluded
+promote|.config/shell|shell support layer should not drift outside source of truth
+promote|.config/zellij|terminal workspace identity is part of the personal environment
+review|.config/Kvantum|Qt theming may belong in the canonical desktop identity
+review|.config/htop|small but useful terminal behavior config
+review|.config/lazygit|developer workflow config may deserve capture
+review|.config/proxychains|network tooling config may matter for restore
+review|.config/s-tui|hardware tooling config may matter if actively used
+noise|.local/share/applications/unzip|generated or duplicate desktop entry noise
+noise|.local/share/applications/gwenview|desktop file duplication from package or app updates
+noise|.local/share/applications/libreoffice|desktop file duplication from package or app updates
+noise|.local/share/applications/google-chrome|desktop file duplication from package or app updates
+noise|.local/share/applications/discord|desktop file duplication from package or app updates
+noise|.config/QtProject.conf|Qt runtime cache-like state
+noise|.config/baloofileinformationrc|desktop indexing noise
+noise|.config/baloofilerc|desktop indexing noise
+noise|.config/cachyos|distro helper state is usually not part of canonical identity
+noise|.config/cachyos-hello.json|distro helper state is usually not part of canonical identity
+noise|.config/dolphinrc|package-provided file manager state is usually not part of canonical path
+noise|.config/filetypesrc|runtime association state is usually noisy
+noise|.config/gwenviewrc|runtime viewer state is usually noisy
+noise|.config/ibus|input framework runtime state
+noise|.config/pavucontrol.ini|audio mixer runtime state
+noise|.config/session|desktop runtime session state
+noise|.config/teamviewer|app-specific runtime state
+noise|.config/trashrc|trash metadata is not canonical
+noise|.config/x-cinnamon-xdg-terminals.list|desktop association noise
+noise|.config/xdg-terminals.list|desktop association noise
+noise|.config/yay|AUR helper runtime state

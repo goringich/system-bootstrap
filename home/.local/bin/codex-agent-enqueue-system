@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+home_root="${HOME}"
+default_workdir="$home_root/system-bootstrap"
+title=""
+workdir="$default_workdir"
+sandbox="workspace-write"
+skip_git_repo_check="false"
+prompt_file=""
+declare -a passthrough_args=()
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  codex-agent-enqueue-system --title NAME [--workdir DIR] [--sandbox MODE] [--prompt-file FILE]
+  codex-agent-enqueue-system --title NAME [--workdir DIR] < prompt.txt
+
+Queues a system-shaped Codex task with the standard repository scope:
+- ~/system-bootstrap
+- ~/codex-orchestrator
+- ~/custom-cachyos-iso
+- ~/Desktop/Obsidian
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --title) title="$2"; shift 2 ;;
+    --workdir) workdir="$2"; shift 2 ;;
+    --sandbox) sandbox="$2"; shift 2 ;;
+    --skip-git-repo-check) skip_git_repo_check="true"; shift ;;
+    --prompt-file) prompt_file="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *)
+      passthrough_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+[[ -n "$title" ]] || {
+  echo "Missing --title" >&2
+  exit 1
+}
+
+tmp_prompt="$(mktemp)"
+trap 'rm -f "$tmp_prompt"' EXIT
+
+cat > "$tmp_prompt" <<EOF
+System conveyor task.
+
+Before proposing changes, recover relevant context from:
+- /home/goringich/Desktop/Obsidian/System/
+- /home/goringich/Desktop/Obsidian/System Blueprint/
+- /home/goringich/Desktop/Obsidian/codex-conversations/index.md and recent relevant conversation notes
+
+Treat these repositories as the main system project surface when relevant:
+- /home/goringich/system-bootstrap
+- /home/goringich/codex-orchestrator
+- /home/goringich/custom-cachyos-iso
+- /home/goringich/Desktop/Obsidian
+
+Respect existing sources of truth, avoid duplicate structures, and update System Blueprint when architecture or restore flow changes.
+
+Task-specific request:
+EOF
+
+if [[ -n "$prompt_file" ]]; then
+  cat "$prompt_file" >> "$tmp_prompt"
+else
+  cat >> "$tmp_prompt"
+fi
+
+exec "$HOME/.local/bin/codex-agent-enqueue" \
+  --title "$title" \
+  --workdir "$workdir" \
+  --sandbox "$sandbox" \
+  --skip-git-repo-check \
+  --add-dir "$home_root/system-bootstrap" \
+  --add-dir "$home_root/codex-orchestrator" \
+  --add-dir "$home_root/custom-cachyos-iso" \
+  --add-dir "$home_root/Desktop/Obsidian" \
+  "${passthrough_args[@]}" \
+  --prompt-file "$tmp_prompt"

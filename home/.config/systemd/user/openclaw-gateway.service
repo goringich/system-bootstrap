@@ -1,0 +1,25 @@
+[Unit]
+Description=OpenClaw Gateway (v2026.4.9)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/node /home/goringich/.local/lib/node_modules/openclaw/dist/entry.js gateway --port 18789
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+TimeoutStartSec=30
+SuccessExitStatus=0 143
+KillMode=control-group
+Environment=HOME=/home/goringich
+Environment=TMPDIR=/tmp
+Environment=PATH=/usr/bin:/home/goringich/.local/bin:/home/goringich/.npm-global/bin:/home/goringich/bin:/home/goringich/.volta/bin:/home/goringich/.asdf/shims:/home/goringich/.bun/bin:/home/goringich/.nvm/current/bin:/home/goringich/.fnm/current/bin:/home/goringich/.local/share/pnpm:/usr/local/bin:/bin
+Environment=OPENCLAW_GATEWAY_PORT=18789
+Environment=OPENCLAW_SYSTEMD_UNIT=openclaw-gateway.service
+Environment="OPENCLAW_WINDOWS_TASK_NAME=OpenClaw Gateway"
+Environment=OPENCLAW_SERVICE_MARKER=openclaw
+Environment=OPENCLAW_SERVICE_KIND=gateway
+Environment=OPENCLAW_SERVICE_VERSION=2026.4.9
+
+[Install]
+WantedBy=default.target

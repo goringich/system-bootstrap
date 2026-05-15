@@ -56,13 +56,13 @@ if [[ "${1:-}" == "--set" ]]; then
 fi
 
 clear
-echo "Fun Audio Control"
+echo "Termjam Audio Control"
 echo
-echo "Current audio pane: $(status_text)"
+echo "Current termjam audio: $(status_text)"
 echo
-echo "e  enable audio pane"
-echo "d  disable audio pane"
-echo "t  toggle audio pane"
+echo "e  enable termjam audio"
+echo "d  disable termjam audio"
+echo "t  toggle termjam audio"
 echo "r  rebuild scene"
 echo "q  quit"
 echo
@@ -74,17 +74,17 @@ while true; do
     e|E)
       set_enabled on
       refresh_scene
-      echo "audio pane enabled"
+      echo "termjam audio enabled"
       ;;
     d|D)
       set_enabled off
       refresh_scene
-      echo "audio pane disabled"
+      echo "termjam audio disabled"
       ;;
     t|T)
       set_enabled toggle
       refresh_scene
-      echo "audio pane $(status_text)"
+      echo "termjam audio $(status_text)"
       ;;
     r|R)
       refresh_scene

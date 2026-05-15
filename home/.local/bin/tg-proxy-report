@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+  set -- summary 24
+fi
+
+exec ssh \
+  -F /dev/null \
+  -i /home/goringich/__home_organized/artifacts/keys/proxybot_windows_ed25519 \
+  -o IdentitiesOnly=yes \
+  -o StrictHostKeyChecking=accept-new \
+  -p 333 \
+  proxybot@178.236.253.46 \
+  "$@"

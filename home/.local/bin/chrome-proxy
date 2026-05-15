@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+profile_dir="${XDG_CONFIG_HOME:-$HOME/.config}/google-chrome-proxy-isolated"
+
+exec /home/goringich/.local/bin/google-chrome-stable \
+  --user-data-dir="$profile_dir" \
+  --new-window \
+  --no-first-run \
+  --no-default-browser-check \
+  --class=chrome-proxy \
+  --name="Chrome Proxy" \
+  --disable-quic \
+  "$@"

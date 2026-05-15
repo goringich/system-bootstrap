@@ -14,7 +14,7 @@ rofi_theme="$HOME/.config/rofi/config-wallpaper-effect.rasi"
 iDIR="$HOME/.config/swaync/images"
 iDIRi="$HOME/.config/swaync/icons"
 
-# swww transition config
+# Wallpaper transition config
 FPS=60
 TYPE="wipe"
 DURATION=2
@@ -45,7 +45,7 @@ declare -A effects=(
 
 # Function to apply no effects
 no-effects() {
-    swww img -o "$focused_monitor" "$wallpaper_current" $SWWW_PARAMS &&
+    awww img --outputs "$focused_monitor" "$wallpaper_current" $SWWW_PARAMS &&
     wait $!
     "$SCRIPTSDIR/WallustSwww.sh" "$wallpaper_current" &&
     wait $!
@@ -83,7 +83,7 @@ main() {
             done
 
             sleep 1
-            swww img -o "$focused_monitor" "$wallpaper_output" $SWWW_PARAMS &
+            awww img --outputs "$focused_monitor" "$wallpaper_output" $SWWW_PARAMS &
 
             sleep 2
   

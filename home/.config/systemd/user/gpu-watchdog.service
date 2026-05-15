@@ -1,0 +1,6 @@
+[Unit]
+Description=Check GPU health and mirror incidents to Obsidian
+
+[Service]
+Type=oneshot
+ExecStart=/home/goringich/.config/hypr/scripts/GpuWatchdog.sh

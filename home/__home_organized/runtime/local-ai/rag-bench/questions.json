@@ -1,0 +1,60 @@
+[
+  {
+    "id": "gpu-baseline",
+    "scope": "system",
+    "query": "где у меня описан текущий GPU baseline и что не считать ошибкой",
+    "exclude_substrings": [
+      "codex-conversations/"
+    ],
+    "expected_any": [
+      "system_debug_start_here.md",
+      "gpu health/index.md"
+    ]
+  },
+  {
+    "id": "rag-embedding-default",
+    "scope": "local-ai",
+    "query": "какая у меня текущая embedding model для RAG и включен ли hybrid search",
+    "exclude_substrings": [
+      "codex-conversations/"
+    ],
+    "expected_any": [
+      "__home_organized/runtime/local-ai/open-webui/compose.yaml",
+      "ии/open webui local.md",
+      "system-bootstrap/docs/local-ai-stack/inventory.md"
+    ]
+  },
+  {
+    "id": "openwebui-compose-path",
+    "scope": "local-ai",
+    "query": "где лежит compose open webui и какие rag env vars у меня выставлены",
+    "exclude_substrings": [
+      "codex-conversations/"
+    ],
+    "expected_any": [
+      "__home_organized/runtime/local-ai/open-webui/compose.yaml"
+    ]
+  },
+  {
+    "id": "control-center-source-of-truth",
+    "scope": "local-ai",
+    "query": "какая заметка у меня является source of truth по local ai control center и rag next steps",
+    "exclude_substrings": [
+      "codex-conversations/"
+    ],
+    "expected_any": [
+      "ии/local ai control center.md"
+    ]
+  },
+  {
+    "id": "retrieval-bootstrap",
+    "scope": "local-ai",
+    "query": "какой локальный retrieval helper у меня ищет контекст по obsidian и inventory",
+    "exclude_substrings": [
+      "codex-conversations/"
+    ],
+    "expected_any": [
+      "__home_organized/scripts/obsidian-context-pack.py"
+    ]
+  }
+]

@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+if command -v flatpak-spawn >/dev/null 2>&1; then
+  FLATPAK_SPAWN="$(command -v flatpak-spawn)"
+elif [ -x /var/lib/flatpak/runtime/org.freedesktop.Sdk/x86_64/25.08/active/files/bin/flatpak-spawn ]; then
+  FLATPAK_SPAWN="/var/lib/flatpak/runtime/org.freedesktop.Sdk/x86_64/25.08/active/files/bin/flatpak-spawn"
+else
+  echo "flatpak-spawn not found" >&2
+  exit 127
+fi
+
+if [ "$#" -eq 0 ]; then
+  exec "$FLATPAK_SPAWN" --host /usr/bin/zsh -il
+fi
+
+exec "$FLATPAK_SPAWN" --host /usr/bin/zsh "$@"

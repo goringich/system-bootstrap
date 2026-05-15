@@ -27,6 +27,9 @@ conversation logs, runtime state, or secrets.
 - `home/__home_organized/scripts/local-ai-control.py` - local AI control
   surface that inventories Ollama/OpenClaw/GPU state and writes an Obsidian
   dashboard.
+- `home/__home_organized/scripts/local-ai/rag-bench.py` - fixed local
+  retrieval benchmark for comparing embedding-model changes against the current
+  Obsidian-backed RAG baseline.
 - `home/.local/share/applications/local-ai-control.desktop` - Rofi/Super+D
   launcher entry for the control surface.
 - `home/__home_organized/runtime/local-ai/open-webui/compose.yaml` - Open WebUI
@@ -67,3 +70,5 @@ tool/function experiments. The wrapper and timer keep newly installed Ollama
 chat models discoverable by OpenClaw.
 
 See `INVENTORY.md` and `SECURITY.md` for the operational map and safety rules.
+Use `ollama-profile-manager rag-bench` before changing the default embedding or
+adding a reranker.

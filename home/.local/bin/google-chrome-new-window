@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+profile="Default"
+
+args=("$@")
+if [[ ${#args[@]} -eq 0 ]]; then
+  args=("about:blank")
+fi
+
+exec "$HOME/.local/bin/google-chrome-stable" \
+  --new-window \
+  --profile-directory="$profile" \
+  "${args[@]}"

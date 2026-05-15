@@ -32,8 +32,7 @@
       "dnd",
       "buttons-grid",
       "mpris",
-      "volume", 
-      "backlight",
+      "volume",
       "title",
       "notifications"
   ],
@@ -50,6 +49,7 @@
           "max-lines": 1,
           "text": "Notification"
       },
+      "notifications": {},
       "mpris": {
           "image-size": 96,
           "image-radius": 8

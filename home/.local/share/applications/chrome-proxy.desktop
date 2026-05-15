@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Google Chrome (Proxy)
+Comment=Launch Chrome in a separate Hiddify-routed profile
+Exec=/home/goringich/.local/bin/chrome-proxy %U
+Icon=google-chrome
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+StartupNotify=true
+StartupWMClass=chrome-proxy

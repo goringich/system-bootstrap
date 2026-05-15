@@ -1,9 +1,10 @@
 @import "~/.config/rofi/config.rasi"
 
 configuration {
-    modi: "combi,drun,run,window,filebrowser";
+    modi: "combi,desk,drun,run,window,filebrowser";
     combi-modi: "drun,run,window,filebrowser";
     show-icons: true;
+    sort: true;
     display-combi: "all";
     display-drun: "apps";
     display-run: "cmd";
@@ -16,58 +17,104 @@ configuration {
     cycle: true;
 }
 
+* {
+    background-color: rgba(8,10,14,0.96);
+    alternate-background: rgba(15,18,24,0.96);
+    normal-background: transparent;
+    foreground-color: #d9e1ee;
+    normal-foreground: #d9e1ee;
+    alternate-normal-background: transparent;
+    alternate-normal-foreground: #d9e1ee;
+    selected: #7aa2f7;
+    selected-normal-background: #7aa2f7;
+    selected-normal-foreground: #0b0f14;
+    selected-active-background: #7aa2f7;
+    selected-active-foreground: #0b0f14;
+    selected-urgent-background: #7aa2f7;
+    selected-urgent-foreground: #0b0f14;
+    active-background: #89b4fa;
+    active-foreground: #0b0f14;
+    urgent-background: #f7768e;
+    urgent-foreground: #0b0f14;
+    border-color: #7aa2f7;
+    handle-color: #7aa2f7;
+}
+
 window {
-    width: 62%;
+    width: 50%;
+    fullscreen: false;
     border: 2px;
-    border-radius: 20px;
+    border-radius: 18px;
+    background-color: rgba(8,10,14,0.96);
 }
 
 mainbox {
     children: [ "inputbar", "mode-switcher", "listview", "message" ];
-    spacing: 16px;
-    padding: 20px;
+    spacing: 12px;
+    padding: 16px;
 }
 
 inputbar {
     children: [ "textbox-prompt-colon", "entry", "case-indicator" ];
-    padding: 14px 18px;
+    padding: 10px 14px;
+    border: 1px;
+    border-radius: 14px;
+    background-color: rgba(18,22,30,0.98);
 }
 
 textbox-prompt-colon {
-    str: " 🔎";
+    str: " all ";
 }
 
 entry {
-    placeholder: "Apps, commands, windows, files";
+    placeholder: "Search apps, files, windows or jump through desktop actions";
 }
 
 mode-switcher {
-    spacing: 12px;
+    spacing: 8px;
+    background-color: transparent;
 }
 
 button {
     border-radius: 999px;
-    padding: 10px 16px;
+    padding: 8px 12px;
+    background-color: rgba(18,22,30,0.98);
+}
+
+button selected {
+    text-color: #0b0f14;
 }
 
 listview {
-    lines: 14;
-    columns: 2;
+    lines: 10;
+    columns: 1;
+    dynamic: false;
     fixed-height: true;
     fixed-columns: true;
-    spacing: 12px;
+    scrollbar: true;
+    spacing: 8px;
+    padding: 8px;
+    border: 1px;
+    border-radius: 16px;
+    background-color: rgba(13,16,22,0.98);
 }
 
 element {
     border-radius: 14px;
-    padding: 14px;
+    padding: 10px 12px;
+    background-color: transparent;
 }
 
 element-icon {
-    size: 2.2em;
+    size: 1.5em;
+}
+
+element-text {
+    vertical-align: 0.5;
 }
 
 message {
     enabled: true;
-    padding: 6px 10px 2px;
+    padding: 0px 4px;
+    text-color: #8b9bb4;
 }

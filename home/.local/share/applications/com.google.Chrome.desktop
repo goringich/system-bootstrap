@@ -1,0 +1,22 @@
+[Desktop Entry]
+Version=1.0
+Name=Google Chrome
+GenericName=Web Browser
+Comment=Access the Internet
+Exec=/home/goringich/.local/bin/google-chrome-stable %U
+Terminal=false
+Type=Application
+Icon=google-chrome
+Categories=Network;WebBrowser;
+StartupNotify=true
+StartupWMClass=Google-chrome
+MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/google-chrome;
+Actions=NewWindow;NewPrivateWindow;
+
+[Desktop Action NewWindow]
+Name=New Window
+Exec=/home/goringich/.local/bin/google-chrome-new-window
+
+[Desktop Action NewPrivateWindow]
+Name=New Incognito Window
+Exec=/home/goringich/.local/bin/google-chrome-stable --incognito

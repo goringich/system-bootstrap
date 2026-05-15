@@ -15,33 +15,30 @@ file_exists() {
 }
 
 # Kill already running processes
-_ps=(waybar rofi swaync ags)
+_ps=(rofi swaync ags)
 for _prs in "${_ps[@]}"; do
   if pidof "${_prs}" >/dev/null; then
     pkill "${_prs}"
   fi
 done
 
-# added since wallust sometimes not applying
-killall -SIGUSR2 waybar
-# Added sleep for GameMode causing multiple waybar
-sleep 0.1
-
 # quit ags & relaunch ags
 #ags -q && ags &
 
-# quit quickshell & relaunch quickshell
-pkill qs && qs &
+# quit quickshell & relaunch overview instance
+pkill -x quickshell >/dev/null 2>&1 || true
+sleep 0.1
+qs -c overview >/dev/null 2>&1 &
 
 # some process to kill
-for pid in $(pidof waybar rofi swaync ags swaybg); do
+for pid in $(pidof rofi swaync ags swaybg 2>/dev/null); do
   kill -SIGUSR1 "$pid"
   sleep 0.1
 done
 
-#Restart waybar
+# Restart waybar through a single launcher path
 sleep 0.1
-waybar &
+"${SCRIPTSDIR}/WaybarEnsure.sh" restart
 
 # relaunch swaync
 sleep 0.3

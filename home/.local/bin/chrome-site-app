@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "$#" -lt 4 ]]; then
+  printf 'Usage: %s <name> <class> <url> <profile-dir> [extra chrome args...]\n' "${0##*/}" >&2
+  exit 64
+fi
+
+app_name="$1"
+window_class="$2"
+url="$3"
+profile_dir="$4"
+shift 4
+
+exec /home/goringich/.local/bin/google-chrome-stable \
+  --user-data-dir="$profile_dir" \
+  --new-window \
+  --no-first-run \
+  --no-default-browser-check \
+  --class="$window_class" \
+  --name="$app_name" \
+  "$url" \
+  "$@"

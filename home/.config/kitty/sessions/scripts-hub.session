@@ -1,0 +1,11 @@
+new_tab title Matrix
+launch bash -lc "cmatrix -abs || exec bash"
+
+new_tab title htop
+launch bash -lc "htop || exec bash"
+
+new_tab title StarWars
+launch bash -lc "$HOME/.config/hypr/scripts/StarWarsTelehack.sh"
+
+new_tab title RofiBeats
+launch bash -lc "$HOME/.config/hypr/UserScripts/RofiBeats.sh; exec bash"

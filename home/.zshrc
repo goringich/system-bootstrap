@@ -34,9 +34,45 @@ fi
 
 # Display Pokemon-colorscripts``
 # Project page: https://gitlab.com/phoneybadger/pokemon-colorscripts#on-other-distros-and-macos
-#pokemon-colorscripts --no-title -s -r #without fastfetch
+# The wide mixed logo layout uses cursor positioning, so we only enable it when
+# the terminal is wide enough. Narrower windows fall back to plain fastfetch
+# without a logo to prevent wraps and shifted text on startup.
+render_terminal_splash() {
+    command -v fastfetch >/dev/null 2>&1 || return 0
+
+    local columns="${COLUMNS:-0}"
+    if [[ ! "$columns" =~ ^[0-9]+$ ]] || (( columns <= 0 )); then
+        if command -v tput >/dev/null 2>&1; then
+            columns="$(tput cols 2>/dev/null || printf '0')"
+        else
+            columns=0
+        fi
+    fi
+
+    if (( columns >= 120 )) && command -v pokemon-colorscripts >/dev/null 2>&1; then
+        pokemon-colorscripts --no-title -s -r | fastfetch \
+            -c "$HOME/.config/fastfetch/config-pokemon.jsonc" \
+            --logo-type file-raw \
+            --logo-height 10 \
+            --logo-width 5 \
+            --logo -
+        return
+    fi
+
+    if (( columns >= 92 )); then
+        fastfetch --pipe true -c "$HOME/.config/fastfetch/config-pokemon.jsonc" --logo none
+        return
+    fi
+
+    fastfetch \
+        --pipe true \
+        --logo none \
+        --separator " -> " \
+        --structure Title:OS:Kernel:WM:Shell:Terminal:CPU:GPU:Memory:Display:Uptime
+}
+
 if [[ -o interactive && -t 1 ]]; then
-    pokemon-colorscripts --no-title -s -r | fastfetch -c $HOME/.config/fastfetch/config-pokemon.jsonc --logo-type file-raw --logo-height 10 --logo-width 5 --logo -
+    render_terminal_splash
 fi
 
 # fastfetch. Will be disabled if above colorscript was chosen to install
@@ -108,6 +144,12 @@ export PATH="$HOME/.local/bin:$PATH"
 
 if [[ -f "$HOME/.config/codex/mcp-secrets.env" ]]; then
     source "$HOME/.config/codex/mcp-secrets.env"
+fi
+
+if [[ -f "$HOME/.openclaw/secrets/gateway.env" ]]; then
+    set -a
+    source "$HOME/.openclaw/secrets/gateway.env"
+    set +a
 fi
 
 # === SSH Agent Configuration ===
@@ -188,7 +230,6 @@ alias h='history 1'
 alias path='echo -e ${PATH//:/\\n}'
 alias mkdir='mkdir -pv'
 alias grep='rg'
-alias dfh='df -hT'
 alias duh='du -h -d 1'
 alias psg='ps aux | rg -i'
 alias ports='ss -tulpn'
@@ -213,7 +254,6 @@ if command -v bat >/dev/null 2>&1; then alias cat='bat --paging=never --style=pl
 if command -v rg >/dev/null 2>&1; then alias grep='rg'; fi
 if command -v fd >/dev/null 2>&1; then alias find='fd'; fi
 if command -v dust >/dev/null 2>&1; then alias du='dust'; fi
-if command -v duf >/dev/null 2>&1; then alias df='duf'; fi
 if command -v procs >/dev/null 2>&1; then alias ps='procs'; fi
 if command -v btop >/dev/null 2>&1; then alias top='btop'; fi
 if command -v prettyping >/dev/null 2>&1; then alias ping='prettyping'; fi
@@ -228,6 +268,173 @@ alias fm='yazi || lf || ranger || nnn'
 alias gg='lazygit'
 alias gu='gitui'
 alias lg='tig'
+
+_df_local_hide_mounts_raw() {
+    local home_source base_source
+
+    home_source="$(findmnt -J -T "$HOME" -o TARGET,SOURCE 2>/dev/null | jq -r '.filesystems[0].source // empty')" || return 0
+    [[ -n "$home_source" ]] || return 0
+    base_source="${home_source%%\[*}"
+
+    findmnt -J -o TARGET,SOURCE 2>/dev/null |
+    jq -r '
+        def walk_fs:
+            . as $node
+            | [$node]
+            + (($node.children // []) | map(walk_fs) | add);
+        .filesystems
+        | map(walk_fs)
+        | add
+        | .[]
+        | [.target, .source]
+        | @tsv
+    ' |
+    while IFS=$'\t' read -r target source; do
+        [[ -n "$target" && -n "$source" ]] || continue
+        [[ "$target" == "$HOME" ]] && continue
+        [[ "$target" == "$HOME/"* ]] || continue
+        [[ "${source#"$base_source"}" != "$source" ]] || continue
+        print -r -- "$target"
+    done |
+    sort -u
+}
+
+_df_local_hide_mounts() {
+    _df_local_hide_mounts_raw |
+    while IFS= read -r target; do
+        print -r -- "${target// /\\040}"
+    done
+}
+
+_df_pretty() {
+    local hide_json
+
+    hide_json="$(_df_local_hide_mounts_raw | jq -R . | jq -s .)"
+    duf -json 2>/dev/null |
+    jq -r --argjson hide "${hide_json:-[]}" '
+        map(select(.mount_point as $mp | ($hide | index($mp) | not))) |
+        .[] |
+        [
+          .device_type,
+          .mount_point,
+          .total,
+          .used,
+          .free,
+          (if .total > 0 then ((.used / .total * 1000 | floor) / 10) else 0 end | tostring) + "%",
+          (if (.type // "") == "" then .fs_type else .type end),
+          .device
+        ] | @tsv
+    ' |
+    awk -F '\t' '
+        function human(x,   i, n, units) {
+            split("B KiB MiB GiB TiB PiB EiB", units, " ")
+            n = x + 0
+            for (i = 1; n >= 1024 && i < 7; i++) n /= 1024
+            if (i == 1) return sprintf("%d%s", n, units[i])
+            return sprintf("%.1f%s", n, units[i])
+        }
+        function repeat(s, n,   out, i) {
+            out = ""
+            for (i = 0; i < n; i++) out = out s
+            return out
+        }
+        function pad(str, width,   s) {
+            s = str
+            gsub(/\033\[[0-9;]*m/, "", s)
+            return str repeat(" ", width - length(s))
+        }
+        function border(left, fill, mid, right) {
+            return left repeat(fill, w1 + 2) mid repeat(fill, w2 + 2) mid repeat(fill, w3 + 2) mid repeat(fill, w4 + 2) mid repeat(fill, w5 + 2) mid repeat(fill, w6 + 2) mid repeat(fill, w7 + 2) right
+        }
+        function print_header(title) {
+            count = section_count[title] + 0
+            printf "╭%s╮\n", repeat("─", total_width - 2)
+            printf "│ %-*s │\n", total_width - 4, count " " title
+            print border("├", "─", "┬", "┤")
+            printf "│ %s │ %s │ %s │ %s │ %s │ %s │ %s │\n", pad("MOUNTED ON", w1), pad("SIZE", w2), pad("USED", w3), pad("AVAIL", w4), pad("USE%", w5), pad("TYPE", w6), pad("FILESYSTEM", w7)
+            print border("├", "─", "┼", "┤")
+        }
+        function print_row(idx) {
+            printf "│ %s │ %s │ %s │ %s │ %s │ %s │ %s │\n", pad(mp[idx], w1), pad(size[idx], w2), pad(used[idx], w3), pad(avail[idx], w4), pad(usep[idx], w5), pad(typev[idx], w6), pad(fs[idx], w7)
+        }
+        BEGIN {
+            w1 = length("MOUNTED ON")
+            w2 = length("SIZE")
+            w3 = length("USED")
+            w4 = length("AVAIL")
+            w5 = length("USE%")
+            w6 = length("TYPE")
+            w7 = length("FILESYSTEM")
+        }
+        function section_name(kind) {
+            return (kind == "local" ? "local devices" : kind " devices")
+        }
+        {
+            kind = $1
+            section = section_name(kind)
+            idx = ++n
+            kind_order[kind] = 1
+            group[idx] = section
+            group_kind[idx] = kind
+            section_count[section]++
+            mp[idx] = $2
+            size[idx] = human($3)
+            used[idx] = human($4)
+            avail[idx] = human($5)
+            usep[idx] = $6
+            typev[idx] = $7
+            fs[idx] = $8
+
+            if (length(mp[idx]) > w1) w1 = length(mp[idx])
+            if (length(size[idx]) > w2) w2 = length(size[idx])
+            if (length(used[idx]) > w3) w3 = length(used[idx])
+            if (length(avail[idx]) > w4) w4 = length(avail[idx])
+            if (length(usep[idx]) > w5) w5 = length(usep[idx])
+            if (length(typev[idx]) > w6) w6 = length(typev[idx])
+            if (length(fs[idx]) > w7) w7 = length(fs[idx])
+        }
+        END {
+            total_width = w1 + w2 + w3 + w4 + w5 + w6 + w7 + 22
+            split("local", preferred, " ")
+            printed_any = 0
+            for (p = 1; p <= length(preferred); p++) {
+                kind = preferred[p]
+                section = section_name(kind)
+                if (!(kind in kind_order)) continue
+                if (printed_any) print ""
+                print_header(section)
+                for (i = 1; i <= n; i++) {
+                    if (group_kind[i] != kind) continue
+                    print_row(i)
+                }
+                print border("╰", "─", "┴", "╯")
+                printed_any = 1
+            }
+        }
+    '
+}
+
+df() {
+    local hide_file
+
+    if (( $# == 0 )); then
+        _df_pretty
+        return
+    fi
+
+    hide_file="$(mktemp)" || return 1
+    _df_local_hide_mounts > "$hide_file"
+    command df -P "$@" | awk 'NR==FNR { hide[$1]=1; next } NR==1 || !($NF in hide)' "$hide_file" -
+    rm -f "$hide_file"
+}
+
+dfh() {
+    if (( $# == 0 )); then
+        _df_pretty
+    else
+        df "$@"
+    fi
+}
 
 # Default cd behavior: use zoxide ranking when target is provided
 cd() {
@@ -282,7 +489,7 @@ fkill() {
 }
 
 sysinfo-pro() {
-    fastfetch -c "$HOME/.config/fastfetch/config-pokemon.jsonc"
+    render_terminal_splash
 }
 
 # List git repositories by locating every .git entry under the given roots.
@@ -333,7 +540,11 @@ if [[ -o interactive && -t 1 ]]; then
 fi
 
 realcode-project() {
-    realcode "${1:-$PWD}"
+    if (( $# > 0 )); then
+        realcode "$@"
+    else
+        realcode "$PWD"
+    fi
 }
 
 # >>> codex hacker prompt >>>
@@ -400,7 +611,7 @@ register_custom_command gu git 'open gitui'
 register_custom_command lg git 'open tig'
 register_custom_command gitrepos git 'list directories that have initialized git repositories'
 register_custom_command realcode git 'count real code lines with product-focused defaults, or only Markdown via --md-only'
-register_custom_command realcode-project git 'run realcode for current directory or provided path'
+register_custom_command realcode-project git 'run realcode for current directory or provided path with product-focused defaults'
 
 register_custom_command t system 'open tmux'
 register_custom_command ta system 'attach to tmux session'
@@ -410,7 +621,8 @@ register_custom_command h system 'show shell history'
 register_custom_command path system 'print PATH line by line'
 register_custom_command mkdir system 'mkdir with parents and verbose output'
 register_custom_command grep system 'ripgrep shortcut'
-register_custom_command dfh system 'human-readable filesystem usage'
+register_custom_command df system 'filesystem usage via duf with bind mounts hidden by default'
+register_custom_command dfh system 'human-readable filesystem usage with bind mounts hidden by default'
 register_custom_command duh system 'directory sizes one level deep'
 register_custom_command psg system 'search running processes'
 register_custom_command ports system 'list listening ports'
@@ -418,13 +630,15 @@ register_custom_command myip system 'show local IP addresses'
 register_custom_command pingg system 'ping google.com'
 register_custom_command extract system 'extract archive by extension'
 register_custom_command fkill system 'fzf process picker and kill -9'
-register_custom_command sysinfo-pro system 'run full fastfetch preset'
+register_custom_command sysinfo-pro system 'render adaptive terminal splash'
 register_custom_command telegram-desktop system 'launch Telegram with XCB backend'
 register_custom_command help meta 'show custom commands help'
 
 register_custom_usage gitrepos $'Usage: gitrepos [search-root ...]\nExamples:\n  gitrepos\n  gitrepos /home/goringich\n  gitrepos ~ /etc /opt\nNotes:\n  Defaults to / when no roots are provided.\n  Skips /proc, /sys, /dev, and /run.\n  Includes nested and cached repos if they contain .git.'
 register_custom_usage realcode $'Usage: realcode [path] [--with-tests] [--with-docs] [--with-config] [--all] [--md-only]\nExamples:\n  realcode\n  realcode .\n  realcode ~/project --with-tests\n  realcode ~/project --md-only\nCounts only non-empty code lines in supported source/config files.\nDefaults to product mode: skips tests, docs, samples, vendored tools, CI and build/config noise.\nUse --md-only to count only Markdown files.\nUse --with-tests, --with-config or --all for broader counts.'
-register_custom_usage realcode-project $'Usage: realcode-project [path]\nShortcut for running realcode on the current directory or a provided path.\nSkips generated/build junk, keeps tests.'
+register_custom_usage realcode-project $'Usage: realcode-project [path]\nShortcut for running realcode on the current directory or a provided path.\nUses the same product-focused defaults as realcode; pass extra flags to widen the count.'
+register_custom_usage df $'Usage: df [duf-options]\nShows filesystem usage through duf with bind mounts hidden by default.\nUse `duf -all` or `command df` when you need the raw unfiltered mount view.'
+register_custom_usage dfh $'Usage: dfh [duf-options]\nHuman-readable filesystem usage with bind mounts hidden by default.\nFalls back to `command df -hT` when duf is unavailable.'
 
 custom_help_category_label() {
   case "$1" in
