@@ -70,6 +70,7 @@ verify-gpu-after-reboot.sh
 .local/share/applications/appscope.desktop
 .local/share/applications/chatgpt-ui.desktop
 .local/share/applications/claude-ui.desktop
+.local/share/applications/obsidian.desktop
 .local/share/applications/system-diagnose.desktop
 .local/share/applications/system-bootstrap-dry-run.desktop
 

@@ -22,6 +22,23 @@ __home_organized/artifacts/zsh-history/
 .config/Code/User/globalStorage/
 .config/Code - OSS/User/globalStorage/
 
+# Generated local-bin shims and backups
+.local/bin/Telegram.codex-*.bak
+.local/bin/debugpy*
+.local/bin/futureagi-agentcc-host
+.local/bin/github-mcp-server
+.local/bin/httpx
+.local/bin/ipython*
+.local/bin/jlpm
+.local/bin/jsonpointer
+.local/bin/jsonschema
+.local/bin/jupyter*
+.local/bin/pybabel
+.local/bin/pyjson5
+.local/bin/send2trash
+.local/bin/wal
+.local/bin/wsdump
+
 # Desktop/session runtime state
 .config/session/
 .config/hypr/wallpaper_effects/.wallpaper_current

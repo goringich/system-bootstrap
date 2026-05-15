@@ -6,16 +6,44 @@ promote|.config/niri|window manager experiments should be either tracked or remo
 promote|.config/quickshell|UI shell layer should be canonical or intentionally excluded
 promote|.config/shell|shell support layer should not drift outside source of truth
 promote|.config/zellij|terminal workspace identity is part of the personal environment
+promote|.local/bin/check-mic.sh|audio diagnostics helper should be part of the canonical mic workflow
+promote|.local/bin/claude-local|local Claude routing wrapper should be canonical if this flow is kept
+promote|.local/bin/claude-obsidian-sync|Claude transcript export should be part of the shared Obsidian capture workflow
+promote|.local/bin/copilot-obsidian-sync|Copilot transcript export should be part of the shared Obsidian capture workflow
+promote|.local/bin/easyeffects|audio wrapper should be part of the canonical desktop audio layer
+promote|.local/bin/easyeffects-start.sh|audio bootstrap wrapper should be part of the canonical desktop audio layer
+promote|.local/bin/mic-rollback.sh|audio rollback helper should be restorable
+promote|.local/bin/oh|OpenHarness wrapper should be canonical if local-agent routing depends on it
+promote|.local/bin/ollama|Ollama wrapper should be canonical if local sync hooks depend on it
+promote|.local/bin/skif777-switch|controlled VPN switching helper should be tracked or intentionally retired
+promote|.local/bin/telegram-profile|multi-profile Telegram launcher is part of desktop identity
 review|.config/Kvantum|Qt theming may belong in the canonical desktop identity
 review|.config/htop|small but useful terminal behavior config
 review|.config/lazygit|developer workflow config may deserve capture
 review|.config/proxychains|network tooling config may matter for restore
 review|.config/s-tui|hardware tooling config may matter if actively used
+review|.local/bin/codex-api|Codex local API helper may deserve a dedicated tracked home
+review|.local/bin/dev-control-api|local dev control API may deserve a dedicated tracked home
 noise|.local/share/applications/unzip|generated or duplicate desktop entry noise
 noise|.local/share/applications/gwenview|desktop file duplication from package or app updates
 noise|.local/share/applications/libreoffice|desktop file duplication from package or app updates
 noise|.local/share/applications/google-chrome|desktop file duplication from package or app updates
 noise|.local/share/applications/discord|desktop file duplication from package or app updates
+noise|.local/bin/Telegram.codex-|backup Telegram wrapper should not count as canonical payload
+noise|.local/bin/debugpy|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/futureagi-agentcc-host|downloaded tool binary should be restored by installer, not copied from local bin
+noise|.local/bin/github-mcp-server|downloaded tool binary should be restored by installer, not copied from local bin
+noise|.local/bin/httpx|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/ipython|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/jlpm|tool shim should be restored by package manager, not copied from local bin
+noise|.local/bin/jsonpointer|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/jsonschema|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/jupyter|Python tool shims should be restored by package or venv, not copied from local bin
+noise|.local/bin/pybabel|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/pyjson5|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/send2trash|Python tool shim should be restored by package or venv, not copied from local bin
+noise|.local/bin/wal|package-installed tool shim should be restored by package manager, not copied from local bin
+noise|.local/bin/wsdump|Python tool shim should be restored by package or venv, not copied from local bin
 noise|.config/QtProject.conf|Qt runtime cache-like state
 noise|.config/baloofileinformationrc|desktop indexing noise
 noise|.config/baloofilerc|desktop indexing noise

@@ -210,7 +210,7 @@ record_uncovered_lane() {
 classify_candidate() {
   local rel="$1"
   local abs="$HOME_ROOT/$rel"
-  local repo_info category repo_root
+  local repo_info category repo_root rule_info bucket reason
 
   repo_info="$(repo_category "$abs")"
   category="${repo_info%%|*}"
@@ -225,7 +225,15 @@ classify_candidate() {
     if snapshot_mirror_exists "$rel"; then
       printf '%s|system-bootstrap|%s\n' "$rel" "$BOOTSTRAP_ROOT" >> "$captured_file"
     else
-      printf '%s|declared-not-captured|%s\n' "$rel" "$BOOTSTRAP_ROOT/home/$rel" >> "$declared_missing_file"
+      rule_info="$(rule_bucket_for "$rel")"
+      bucket="${rule_info%%|*}"
+      reason="${rule_info#*|}"
+      case "$bucket" in
+        promote) printf '%s|%s\n' "$rel" "$reason" >> "$promote_file" ;;
+        review) printf '%s|%s\n' "$rel" "$reason" >> "$review_file" ;;
+        noise) printf '%s|%s\n' "$rel" "$reason" >> "$noise_file" ;;
+        *) printf '%s|declared-not-captured|%s\n' "$rel" "$BOOTSTRAP_ROOT/home/$rel" >> "$declared_missing_file" ;;
+      esac
     fi
     return
   fi
@@ -407,7 +415,7 @@ do
   done < "$candidate_file"
 done
 
-rg -l --hidden --no-messages --glob '!*.sqlite*' --glob '!*.db' \
+rg -l --hidden --no-messages --glob '!*.sqlite*' --glob '!*.db' --glob '!*.example.env' \
   '(github_pat_[A-Za-z0-9_]+|CODEX_GITHUB_PERSONAL_ACCESS_TOKEN|GITHUB_PERSONAL_ACCESS_TOKEN=)' \
   "$HOME_ROOT/.config/codex" \
   "$HOME_ROOT/.zsh_history" \

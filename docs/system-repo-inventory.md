@@ -1,6 +1,6 @@
 # repo-inventory
 
-Generated: `2026-04-25T04:05:55+03:00`
+Generated: `2026-05-15T22:57:38+03:00`
 
 Scan root: `/home/goringich`
 
@@ -18,26 +18,25 @@ Repo scope: `system`
 
 - `/home/goringich/Desktop/Obsidian` -> `git@github.com:goringich/Obsidian.git` -> branch `master` -> dirty `25`
 - `/home/goringich/__home_organized/scripts/obsidian-voice-vocab` -> `git@github.com:goringich/jJarvis-Translator-into-Obsidian.git` -> branch `main` -> dirty `0`
-- `/home/goringich/__home_organized` -> `git@github.com:goringich/__home_organized.git` -> branch `master` -> dirty `7`
-- `/home/goringich/codex-orchestrator` -> `git@github.com:goringich/codex-orchestrator.git` -> branch `main` -> dirty `7`
+- `/home/goringich/__home_organized` -> `git@github.com:goringich/__home_organized.git` -> branch `master` -> dirty `2`
+- `/home/goringich/codex-orchestrator` -> `git@github.com:goringich/codex-orchestrator.git` -> branch `main` -> dirty `0`
 - `/home/goringich/custom-cachyos-iso` -> `git@github.com:goringich/my-custom-cachyos-iso.git` -> branch `master` -> dirty `0`
 - `/home/goringich/hyprland-nvidia-recovery-docs` -> `git@github.com:goringich/hyprland-nvidia-recovery-docs.git` -> branch `master` -> dirty `0`
 - `/home/goringich/obsidian-repo-mounts` -> `git@github.com:goringich/obsidian-repo-mounts.git` -> branch `main` -> dirty `0`
-- `/home/goringich/system-bootstrap` -> `git@github.com:goringich/system-bootstrap.git` -> branch `codex/local-ai-stack-snapshot` -> dirty `199`
+- `/home/goringich/system-bootstrap` -> `git@github.com:goringich/system-bootstrap.git` -> branch `codex/local-ai-stack-snapshot` -> dirty `6`
 
 ## External Upstream Repos
 
 
 ## Local-Only Repos
 
-- `/home/goringich/dotfiles` -> branch `main` -> dirty `3`
+- `/home/goringich/dotfiles` -> branch `main` -> dirty `0`
 
 ## Restore Risks
 
 - dirty personal repo: `/home/goringich/Desktop/Obsidian` -> `git@github.com:goringich/Obsidian.git` -> branch `master` -> dirty `25`
-- dirty personal repo: `/home/goringich/__home_organized` -> `git@github.com:goringich/__home_organized.git` -> branch `master` -> dirty `7`
-- dirty personal repo: `/home/goringich/codex-orchestrator` -> `git@github.com:goringich/codex-orchestrator.git` -> branch `main` -> dirty `7`
-- dirty personal repo: `/home/goringich/system-bootstrap` -> `git@github.com:goringich/system-bootstrap.git` -> branch `codex/local-ai-stack-snapshot` -> dirty `199`
+- dirty personal repo: `/home/goringich/__home_organized` -> `git@github.com:goringich/__home_organized.git` -> branch `master` -> dirty `2`
+- dirty personal repo: `/home/goringich/system-bootstrap` -> `git@github.com:goringich/system-bootstrap.git` -> branch `codex/local-ai-stack-snapshot` -> dirty `6`
 
 ## Notes
 
