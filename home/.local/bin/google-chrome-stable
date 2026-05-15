@@ -41,13 +41,6 @@ args=("$@")
 if [[ -f "${quarantine_file}" ]]; then
   # shellcheck disable=SC1090
   source "${quarantine_file}"
-  if [[ "${GPU_QUARANTINE:-0}" == "1" ]]; then
-    flags+=(
-      --disable-accelerated-video-decode
-      --disable-gpu
-      --disable-gpu-compositing
-    )
-  fi
 fi
 for f in "${flags[@]}"; do
   skip=false

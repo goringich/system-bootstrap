@@ -112,6 +112,7 @@ system-diagnose
 - On this machine the GPU link can downshift in idle and raise under load.
 - Prefer checking `nvidia-smi` and a short real load before concluding PCIe is broken.
 - `sysfs max_link_speed` is device capability, not necessarily the practical negotiated runtime ceiling.
+- Do not accept software-rendered Obsidian, browser, Electron, or Chromium paths as a real fix. If a GUI surface only works via `--disable-gpu`, SwiftShader, or similar CPU fallback, the machine still has an unresolved graphics integration problem.
 - For current NVIDIA runtime interpretation, prefer:
   - `nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.gen.max,pcie.link.width.current,pcie.link.width.max`
   - then compare that with real load and current `pstate`

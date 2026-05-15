@@ -11,7 +11,6 @@ fi
 
 exec "${DISCORD_BIN}" \
   --no-sandbox \
-  --disable-gpu \
   --disable-extensions \
   --disable-logging \
   --ozone-platform-hint=auto \

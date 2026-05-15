@@ -5,39 +5,18 @@ quarantine_file="${HOME}/.local/state/gpu-watchdog/quarantine.env"
 flags=()
 launch_env=(env)
 args=("$@")
-safe_render_reason=""
-
-enable_safe_render() {
-  launch_env+=(
-    ELECTRON_OZONE_PLATFORM_HINT=x11
-    OZONE_PLATFORM=x11
-    GDK_BACKEND=x11
-  )
-  flags+=(
-    --disable-gpu
-    --disable-gpu-compositing
-    --disable-accelerated-video-decode
-    --disable-features=UseChromeOSDirectVideoDecoder,UseSkiaRenderer
-    --ozone-platform=x11
-  )
-}
+launch_env+=(
+  ELECTRON_OZONE_PLATFORM_HINT=x11
+  OZONE_PLATFORM=x11
+  GDK_BACKEND=x11
+)
+flags+=(
+  --ozone-platform=x11
+)
 
 if [[ -f "${quarantine_file}" ]]; then
   # shellcheck disable=SC1090
   source "${quarantine_file}"
-  if [[ "${GPU_QUARANTINE:-0}" == "1" ]]; then
-    safe_render_reason="gpu-quarantine"
-  fi
-fi
-
-# Obsidian's built-in PDF viewer is more reliable on this host when forced
-# through the X11/software path. Set OBSIDIAN_ALLOW_GPU=1 to opt out manually.
-if [[ -z "${safe_render_reason}" && "${OBSIDIAN_ALLOW_GPU:-0}" != "1" ]]; then
-  safe_render_reason="pdf-safe-default"
-fi
-
-if [[ -n "${safe_render_reason}" ]]; then
-  enable_safe_render
 fi
 
 for f in "${flags[@]}"; do

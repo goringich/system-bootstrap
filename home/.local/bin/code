@@ -17,9 +17,6 @@ fi
 if [[ -f "${quarantine_file}" ]]; then
   # shellcheck disable=SC1090
   source "${quarantine_file}"
-  if [[ "${GPU_QUARANTINE:-0}" == "1" ]]; then
-    args=(--disable-gpu "${args[@]}")
-  fi
 fi
 
 exec flatpak run com.visualstudio.code "${args[@]}"
